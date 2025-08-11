@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Invoice Print</title>
+    <style>
+      @page { margin: 12mm }
+      @media print {
+        .no-print { display:none }
+        footer { position: fixed; bottom: 0; left: 0; right: 0; font-size: 12px; }
+      }
+      body { font-family: system-ui; margin:0; }
+      .invoice { min-height: 90vh; padding: 16px; border-top: 4px solid #555 }
+      footer { border-top: 1px solid #ddd; padding: 8px 16px; }
+    </style>
+  </head>
+  <body>
+    <div class="invoice">
+      <h1>Geeklatinmaster LLC</h1>
+      <p>Invoice #0001 — Customer: Demo</p>
+      <p>Line 1 — Servicio</p>
+    </div>
+    <footer>Footer fijo — términos y condiciones | ACH/Zelle disponible</footer>
+    <button class="no-print" onclick="window.print()" style="margin:16px">Imprimir / PDF</button>
+  </body>
+</html>
