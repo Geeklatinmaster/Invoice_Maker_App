@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Print — InvoiceMaker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      @page { margin: 12mm }
+      body { margin: 0; font-family: system-ui; }
+      /* pantalla */
+      main { padding: 16px; }
+      .no-print { position: fixed; top: 12px; right: 12px; padding: 8px 12px; }
+      /* impresión */
+      @media print {
+        .no-print { display: none; }
+        main { min-height: auto; padding-bottom: 18mm; }
+        .print-footer {
+          position: fixed;
+          bottom: 0; left: 0; right: 0;
+          font-size: 12px;
+          padding: 8px 16px;
+          border-top: 1px solid #ddd;
+          background: white;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="no-print" onclick="window.print()">Imprimir / PDF</button>
+    <main id="root"></main>
+    <script type="module" src="/src/print.tsx"></script>
+  </body>
+</html>
