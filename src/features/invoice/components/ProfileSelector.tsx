@@ -1,37 +1,26 @@
 import type { ChangeEvent } from "react";
 import { useInvoice } from "../store/useInvoice";
 
-/* -------------------------------------------------
-   Helpers para leer y escalar imágenes (DataURL)
-------------------------------------------------- */
-
-// Lee un archivo local como DataURL (base64)
+/** Lee un archivo local como Data URL (base64) */
 async function fileToDataURL(file: File): Promise<string> {
-  return await new Promise<string>((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
+    r.onload = () => resolve(String(r.result));
     r.onerror = (e) => reject(e);
     r.readAsDataURL(file);
   });
 }
 
-/**
- * Reescala manteniendo proporción para limitar tamaño (máx 800px lado mayor).
- * @param dataUrl  DataURL de entrada (image/*)
- * @param maxSide  Lado máximo (default 800)
- * @param mimeHint Sugerencia de mime de salida (p.ej. "image/png" | "image/jpeg")
- */
+/** Reescala manteniendo proporción para limitar tamaño (máx 800px lado mayor). */
 async function downscaleDataURL(
   dataUrl: string,
   maxSide = 800,
-  mimeHint: string
+  mimeHint = "image/png"
 ): Promise<string> {
-  return await new Promise<string>((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
       const { width, height } = img;
-
-      // escala <= 1 (nunca agrandar)
       const scale = Math.min(maxSide / Math.max(width, height), 1);
       const w = Math.round(width * scale);
       const h = Math.round(height * scale);
@@ -56,31 +45,17 @@ async function downscaleDataURL(
   });
 }
 
-/* -------------------------------------------------
-   Tipos derivados del store (para evitar any/undefined)
-------------------------------------------------- */
-
-type StoreState = ReturnType<typeof useInvoice.getState>;
-type Profile = StoreState["profiles"][number];
-
-/* -------------------------------------------------
-   UI
-------------------------------------------------- */
-
 export default function ProfileSelector() {
   const s = useInvoice();
-  const sel: Profile | undefined =
-    s.profiles.find((p) => p.id === s.selectedProfileId) ?? s.profiles[0];
+  const sel = s.profiles.find((p) => p.id === s.selectedProfileId) ?? s.profiles[0];
 
   const setSelected = (id: string) => {
     useInvoice.setState({ selectedProfileId: id });
   };
 
-  const updateSelectedProfile = (patch: Partial<Profile>) => {
+  const updateSelectedProfile = (patch: Partial<typeof sel>) => {
     if (!sel) return;
-    const profiles = s.profiles.map((p) =>
-      p.id === sel.id ? { ...p, ...patch } : p
-    );
+    const profiles = s.profiles.map((p) => (p.id === sel.id ? { ...p, ...patch } : p));
     useInvoice.setState({ profiles });
   };
 
@@ -88,11 +63,8 @@ export default function ProfileSelector() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      // 1) a DataURL
       const dataUrl = await fileToDataURL(file);
-      // 2) opcional: reescalar
       const scaled = await downscaleDataURL(dataUrl, 800, file.type);
-      // 3) guardar en el perfil seleccionado
       updateSelectedProfile({ logoUrl: scaled });
     } finally {
       e.target.value = ""; // reset input
@@ -117,18 +89,15 @@ export default function ProfileSelector() {
 
       {sel && (
         <div style={{ display: "grid", gap: 8 }}>
-          {/* Business name */}
           <input
             placeholder="Business Name"
             value={sel.businessName ?? ""}
-            onChange={(e) =>
-              updateSelectedProfile({ businessName: e.target.value })
-            }
+            onChange={(e) => updateSelectedProfile({ businessName: e.target.value })}
           />
 
           {/* URL directa opcional */}
           <input
-            placeholder="Logo URL (https...)"
+            placeholder="Logo URL (https://...)"
             value={sel.logoUrl ?? ""}
             onChange={(e) => updateSelectedProfile({ logoUrl: e.target.value })}
           />
@@ -139,12 +108,8 @@ export default function ProfileSelector() {
               Subir logo (PNG/JPG):&nbsp;
               <input type="file" accept="image/*" onChange={onPickLogo} />
             </label>
-
             {sel.logoUrl && (
-              <button
-                type="button"
-                onClick={() => updateSelectedProfile({ logoUrl: "" })}
-              >
+              <button type="button" onClick={() => updateSelectedProfile({ logoUrl: "" })}>
                 Quitar logo
               </button>
             )}
