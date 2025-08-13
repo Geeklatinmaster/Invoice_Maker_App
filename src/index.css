@@ -65,4 +65,13 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+/* evita que botones/controles aparezcan en PDF */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    margin: 0;
+  }
+}
 }

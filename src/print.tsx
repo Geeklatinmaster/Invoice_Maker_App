@@ -2,17 +2,15 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import Preview from "./features/invoice/components/Preview";
 import { useInvoice } from "./features/invoice/store/useInvoice";
-// Opcional, pero útil si cambias algo desde /print.html:
 import "./features/invoice/store/autosave";
 
-// Hidratar el store desde localStorage (o desde tu helper si existe)
 function hydrateFromLocalStorage() {
   try {
     const raw = localStorage.getItem("invoice-maker@state");
     if (!raw) return;
     const saved = JSON.parse(raw);
     useInvoice.setState(saved);
-    // Asegura totales correctos después de hidratar
+    // Recalcular totales tras hidratar
     setTimeout(() => useInvoice.getState().compute(), 0);
   } catch (e) {
     console.warn("No se pudo hidratar estado:", e);
@@ -26,3 +24,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <Preview />
   </React.StrictMode>
 );
+
+// Si viene ?auto=1, abre el diálogo de impresión y luego cierra
+const params = new URLSearchParams(window.location.search);
+if (params.get("auto") === "1") {
+  setTimeout(() => window.print(), 100);
+  window.onafterprint = () => setTimeout(() => window.close(), 100);
+}
