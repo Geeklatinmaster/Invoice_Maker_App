@@ -1,0 +1,4 @@
+:root { font-synthesis-weight: none; text-rendering: optimizeLegibility; }
+*{ box-sizing:border-box; }
+html,body,#root{ height:100%; margin:0; }
+body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
