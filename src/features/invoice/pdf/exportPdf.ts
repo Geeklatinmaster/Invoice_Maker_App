@@ -1,6 +1,5 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import "./jspdf-types";
 import type { Invoice, Profile, InvoiceItem } from "@/features/invoice/types/types";
 import { fmtCurrency } from "@/features/invoice/lib/format";
 
