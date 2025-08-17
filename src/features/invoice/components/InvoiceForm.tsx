@@ -1,4 +1,5 @@
 import { useInvoice } from "@/features/invoice/store/useInvoice";
+import { exportInvoicePdf } from "@/features/invoice/pdf/exportPdf";
 
 export default function InvoiceForm() {
   const s = useInvoice();
@@ -13,6 +14,39 @@ export default function InvoiceForm() {
     if(iv.items.length===0) errs.push("Al menos 1 ítem.");
     if(errs.length){ alert(errs.join("\n")); return false; }
     return true;
+  };
+
+  const handleExportPdf = async () => {
+    try {
+      // Ensure totals are computed
+      s.compute();
+      
+      // Prepare logo data URL if available
+      let logoDataUrl: string | undefined;
+      if (profile?.logoUrl) {
+        try {
+          const response = await fetch(profile.logoUrl);
+          const blob = await response.blob();
+          logoDataUrl = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        } catch (e) {
+          console.warn("Failed to load logo for PDF:", e);
+        }
+      }
+      
+      // Export PDF
+      await exportInvoicePdf(iv, {
+        profile,
+        totals: s.totals,
+        logoDataUrl
+      });
+    } catch (error) {
+      console.error("Failed to export PDF:", error);
+      alert("Failed to export PDF. Please try again.");
+    }
   };
 
   return (
@@ -59,6 +93,17 @@ export default function InvoiceForm() {
       </div>
 
       <div style={{display:"flex", gap:8}}>
+        <button 
+          onClick={handleExportPdf}
+          disabled={iv.items.length === 0}
+          title={iv.items.length === 0 ? "Add items to export PDF" : "Export as PDF"}
+          style={{
+            opacity: iv.items.length === 0 ? 0.5 : 1,
+            cursor: iv.items.length === 0 ? "not-allowed" : "pointer"
+          }}
+        >
+          📄 Export PDF
+        </button>
         <button onClick={()=>{ if (validateUSA()) { s.compute(); window.open("/print.html","_blank"); } }}>Exportar PDF (print)</button>
         <button onClick={()=>{ alert(JSON.stringify(s.totals, null, 2)); }}>View Totals (Debug)</button>
       </div>
