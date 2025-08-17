@@ -1,4 +1,4 @@
-import { useInvoice } from "../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 import type { FooterId } from "../types/types";
 
 const FOOTERS: { id: FooterId; label: string }[] = [
