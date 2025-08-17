@@ -1,6 +1,23 @@
 import { useInvoice } from "@/features/invoice/store/useInvoice";
 import { exportInvoicePdf } from "@/features/invoice/pdf/exportPdf";
 
+// Helper functions
+async function fetchAsDataURL(url: string): Promise<string | undefined> {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return undefined;
+    const blob = await res.blob();
+    return await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => resolve(undefined);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return undefined; }
+}
+
+function toast(msg: string) { try { alert(msg); } catch {} }
+
 export default function InvoiceForm() {
   const s = useInvoice();
   const iv = s.invoice;
@@ -16,38 +33,6 @@ export default function InvoiceForm() {
     return true;
   };
 
-  const handleExportPdf = async () => {
-    try {
-      // Ensure totals are computed
-      s.compute();
-      
-      // Prepare logo data URL if available
-      let logoDataUrl: string | undefined;
-      if (profile?.logoUrl) {
-        try {
-          const response = await fetch(profile.logoUrl);
-          const blob = await response.blob();
-          logoDataUrl = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
-          });
-        } catch (e) {
-          console.warn("Failed to load logo for PDF:", e);
-        }
-      }
-      
-      // Export PDF
-      await exportInvoicePdf(iv, {
-        profile,
-        totals: s.totals,
-        logoDataUrl
-      });
-    } catch (error) {
-      console.error("Failed to export PDF:", error);
-      alert("Failed to export PDF. Please try again.");
-    }
-  };
 
   return (
     <section style={{display:"grid", gap:8}}>
@@ -93,18 +78,62 @@ export default function InvoiceForm() {
       </div>
 
       <div style={{display:"flex", gap:8}}>
-        <button 
-          onClick={handleExportPdf}
-          disabled={iv.items.length === 0}
-          title={iv.items.length === 0 ? "Add items to export PDF" : "Export as PDF"}
-          style={{
-            opacity: iv.items.length === 0 ? 0.5 : 1,
-            cursor: iv.items.length === 0 ? "not-allowed" : "pointer"
+        <button
+          onClick={async () => {
+            const currentState = useInvoice.getState();
+            const currentInvoice = currentState.invoice;
+            if (!currentInvoice || !Array.isArray(currentInvoice.items) || currentInvoice.items.length === 0) {
+              toast("Add at least 1 item before exporting.");
+              return;
+            }
+            const currentProfile = currentState.selectedProfileId
+              ? currentState.profiles.find(p => p.id === currentState.selectedProfileId)
+              : undefined;
+            let logoDataUrl: string | undefined;
+            if (currentProfile && (currentProfile as any)?.logoUrl) {
+              logoDataUrl = await fetchAsDataURL((currentProfile as any).logoUrl);
+            }
+            try {
+              await exportInvoicePdf(currentInvoice, { 
+                profile: currentProfile, 
+                totals: currentState.totals, 
+                logoDataUrl 
+              });
+            } catch (err) {
+              console.error("exportInvoicePdf failed:", err);
+              toast("PDF export failed. Check console for details.");
+            }
           }}
+          disabled={useInvoice.getState().invoice.items.length === 0}
         >
           📄 Export PDF
         </button>
-        <button onClick={()=>{ if (validateUSA()) { s.compute(); window.open("/print.html","_blank"); } }}>Exportar PDF (print)</button>
+
+        <button
+          onClick={() => {
+            const currentState = useInvoice.getState();
+            const currentInvoice = currentState.invoice;
+            if (!currentInvoice || !Array.isArray(currentInvoice.items) || currentInvoice.items.length === 0) {
+              toast("Add at least 1 item before printing.");
+              return;
+            }
+            try {
+              localStorage.setItem("invoice:last", JSON.stringify({
+                invoice: currentInvoice,
+                totals: currentState.totals,
+                profile: currentState.selectedProfileId
+                  ? currentState.profiles.find(p => p.id === currentState.selectedProfileId)
+                  : undefined
+              }));
+              window.open("/print.html", "_blank", "noopener,noreferrer");
+            } catch (e) {
+              console.error("print open failed:", e);
+              toast("Could not open print view.");
+            }
+          }}
+        >
+          🖨️ Exportar PDF (print)
+        </button>
         <button onClick={()=>{ alert(JSON.stringify(s.totals, null, 2)); }}>View Totals (Debug)</button>
       </div>
     </section>
