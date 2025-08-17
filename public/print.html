@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Invoice Print</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+      h1 { margin: 0 0 16px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+      th, td { border-bottom: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+      tfoot td { font-weight: 600; }
+      .row { display:flex; gap:32px; justify-content: space-between; }
+      .col { min-width: 280px; }
+      .muted { color:#666; font-size:12px; margin-top:16px; }
+    </style>
+  </head>
+  <body>
+    <h1 id="title">Invoice</h1>
+    <div class="row">
+      <div class="col" id="vendor"></div>
+      <div class="col" id="client"></div>
+    </div>
+    <table id="items">
+      <thead>
+        <tr><th>#</th><th>Description</th><th>Qty</th><th>Unit</th><th>Amount</th></tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot id="totals"></tfoot>
+    </table>
+    <div class="muted">Static print view</div>
+    <script>
+      function fmtMoney(n, currency){ try{ return new Intl.NumberFormat(undefined,{style:'currency',currency}).format(+n||0) }catch(e){ return (currency||'USD')+' '+(Number(n||0)).toFixed(2)}}
+      const snap = localStorage.getItem("invoice:last");
+      if(!snap){ document.body.innerHTML = "<p>No invoice data found. Export from the app first.</p>"; }
+      else {
+        const { invoice, totals, profile } = JSON.parse(snap);
+        const titleEl = document.getElementById("title");
+        titleEl.textContent = (invoice?.docType || "INVOICE") + (invoice?.code ? " • " + invoice.code : "");
+        const vendor = document.getElementById("vendor");
+        if (profile) {
+          vendor.innerHTML = `
+            <strong>${profile.businessName || ""}</strong><br/>
+            ${profile.address || ""}<br/>
+            ${profile.email || ""} ${profile.phone ? " • "+profile.phone : ""}`;
+        }
+        const client = document.getElementById("client");
+        const customer = invoice?.customer || {};
+        client.innerHTML = `
+          <strong>Customer</strong><br/>
+          ${customer?.name || ""}<br/>
+          ${customer?.email || ""} ${customer?.phone ? " • "+customer.phone : ""}`;
+        const tbody = document.querySelector("#items tbody");
+        (invoice?.items || []).forEach((it, idx) => {
+          const tr = document.createElement("tr");
+          const qty = Number(it?.qty||it?.quantity||1)||1;
+          const unit = Number(it?.unitPrice||it?.price||0)||0;
+          const total = qty*unit;
+          tr.innerHTML = `
+            <td>${idx+1}</td>
+            <td>${it?.description || it?.title || ""}</td>
+            <td>${qty}</td>
+            <td>${fmtMoney(unit, invoice?.currency || "USD")}</td>
+            <td>${fmtMoney(total, invoice?.currency || "USD")}</td>`;
+          tbody.appendChild(tr);
+        });
+        const tfoot = document.getElementById("totals");
+        if (totals) {
+          tfoot.innerHTML = `
+            <tr><td colspan="4" style="text-align:right">Subtotal</td><td>${fmtMoney(totals.subtotal ?? totals.subTotal ?? 0, invoice?.currency || "USD")}</td></tr>
+            <tr><td colspan="4" style="text-align:right">Discount</td><td>${fmtMoney(totals.discount ?? 0, invoice?.currency || "USD")}</td></tr>
+            <tr><td colspan="4" style="text-align:right">Tax</td><td>${fmtMoney(totals.tax ?? 0, invoice?.currency || "USD")}</td></tr>
+            <tr><td colspan="4" style="text-align:right"><strong>Total</strong></td><td><strong>${fmtMoney(totals.total ?? 0, invoice?.currency || "USD")}</strong></td></tr>`;
+        }
+      }
+    </script>
+  </body>
+</html>
