@@ -1,4 +1,4 @@
-import { useInvoice } from "../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 
 export default function InvoiceForm() {
   const s = useInvoice();
@@ -24,7 +24,7 @@ export default function InvoiceForm() {
             <option>QUOTE</option>
           </select>
         </label>
-        <span>Code: {iv.code} <button onClick={s.regenerateCode}>regen</button></span>
+        <span>Code: {iv.code} <button onClick={s.regenerateCode} title="Generate new code">🔄 Regenerate</button></span>
         <label>Issue Date: <input type="date" value={iv.issueDate} onChange={e=>s.patchInvoice({issueDate: e.target.value})}/></label>
       </div>
 
@@ -60,7 +60,7 @@ export default function InvoiceForm() {
 
       <div style={{display:"flex", gap:8}}>
         <button onClick={()=>{ if (validateUSA()) { s.compute(); window.open("/print.html","_blank"); } }}>Exportar PDF (print)</button>
-        <button onClick={()=>{ s.compute(); alert(JSON.stringify(s.totals, null, 2)); }}>Recalcular</button>
+        <button onClick={()=>{ alert(JSON.stringify(s.totals, null, 2)); }}>View Totals (Debug)</button>
       </div>
     </section>
   );

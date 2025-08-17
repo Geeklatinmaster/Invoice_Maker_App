@@ -9,6 +9,8 @@
     "zustand": "^5.0.7"
   },
   "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.2"
@@ -16,6 +18,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules/.cache .turbo && echo Caché limpiado. Ejecuta npm run dev",
+    "clean:full": "rm -rf node_modules package-lock.json .turbo node_modules/.cache && echo Proyecto reseteado. Ejecuta npm install",
+    "restart-vscode": "pkill -f 'Visual Studio Code' || true && sleep 1 && code .",
+    "restart-dev": "npm run clean && pkill -f 'Visual Studio Code' || true && sleep 1 && code . && npm run dev"
   }
 }

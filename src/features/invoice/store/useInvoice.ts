@@ -1,125 +1,343 @@
 import { create } from "zustand";
 import { nanoid } from "nanoid";
-import { load, save } from "../lib/storage";
-import type { Profile, Invoice, InvoiceItem, FooterId, DocType, RetentionPreset } from "../types/types";
+import { save, load } from "../lib/storage";
+import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset } from "../types/types";
 
-type Totals = { subTotal: number; discount: number; tax: number; retention: number; total: number };
+// Robust code generation helpers
+const rand = (n = 5) => Math.random().toString(36).slice(2, 2 + n).toUpperCase();
+const makeCode = (docType: DocType) =>
+  (docType === "INVOICE" ? "INV-" : "QTE-") +
+  new Date().toISOString().slice(2,10).replace(/-/g, "") + "-" + rand();
 
-type State = {
-  profiles: Profile[];
-  selectedProfileId?: string;
-  invoice: Invoice;
-  totals: Totals;
+type Totals = {
+  subtotal: number;
+  tax: number;
+  discount: number;
+  retention: number;
+  total: number;
 };
 
-type Actions = {
-  patchInvoice: (patch: Partial<Invoice>) => void;
-  setDocType: (t: DocType) => void;
-  regenerateCode: () => void;
-  setFooterId: (f: FooterId) => void;
-  setGlobalTax: (p: number) => void;
-  setGlobalDiscount: (p: number) => void;
-  setRetentionPreset: (r: RetentionPreset) => void;
-
-  addItem: () => void;
-  updateItem: (id: string, patch: Partial<InvoiceItem>) => void;
-  removeItem: (id: string) => void;
-
-  addProfile: (p: Omit<Profile,"id">) => void;
-  updateProfile: (id: string, patch: Partial<Profile>) => void;
-  deleteProfile: (id: string) => void;
+type InvoiceStore = {
+  // State
+  profiles: Profile[];
+  selectedProfileId: string;
+  invoice: Invoice;
+  totals: Totals;
+  
+  // Profile actions
   selectProfile: (id: string) => void;
+  addProfile: (profile: Partial<Profile>) => void;
+  updateProfile: (id: string, updates: Partial<Profile>) => void;
+  deleteProfile: (id: string) => void;
   exportProfiles: () => string;
   importProfiles: (json: string) => void;
+  
+  // Invoice actions
+  setDocType: (docType: DocType) => void;
+  regenerateCode: () => void;
+  patchInvoice: (updates: Partial<Invoice>) => void;
+  setFooterId: (footerId: FooterId) => void;
+  setGlobalDiscount: (discount: number) => void;
+  setGlobalTax: (tax: number) => void;
+  setRetentionPreset: (preset: RetentionPreset) => void;
+  
+  // Item actions
+  addItem: () => void;
+  updateItem: (id: string, updates: Partial<InvoiceItem>) => void;
+  removeItem: (id: string) => void;
+  
+  // Computation
   compute: () => void;
 };
 
-const codeFor = (t: DocType) => {
-  const d = new Date();
-  const yyyymm = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}`;
-  const rand = Math.floor(Math.random()*10000).toString().padStart(4,"0");
-  return (t === "INVOICE" ? "INV" : "QTE") + "-" + yyyymm + "-" + rand;
-};
 
-const initial: State = load<State>({
-  profiles: [{
-    id: "demo",
-    name: "Geeklatinmaster (demo)",
-    businessName: "Geeklatinmaster LLC",
-    email: "info@geeklatinmaster.com",
-    phone: "+1 (555) 555-5555",
-    website: "https://geeklatinmaster.com",
-    taxId: "12-3456789",
-    currency: "USD",
-    locale: "en-US",
-    defaultTaxRate: 0,
-    defaultFooterId: "v3-us",
-  }],
-  selectedProfileId: "demo",
-  invoice: {
-    docType: "INVOICE",
-    code: codeFor("INVOICE"),
-    issueDate: new Date().toISOString().slice(0,10),
-    customerName: "",
-    items: [{ id: nanoid(), title: "Service", qty: 1, unitPrice: 100 }],
-    globalDiscount: 0,
-    globalTaxRate: 0,
-    retentionPreset: "NO_AGENTE",
-    footerId: "v3-us",
-  },
-  totals: { subTotal: 0, discount: 0, tax: 0, retention: 0, total: 0 },
+const createDefaultProfile = (): Profile => ({
+  id: nanoid(),
+  name: "Default Profile",
+  businessName: "My Business",
+  currency: "USD",
+  locale: "en-US",
+  defaultFooterId: "v1-minimal",
 });
 
-export const useInvoice = create<State & Actions>()((set, get) => ({
-  ...initial,
+const createDefaultInvoice = (): Invoice => ({
+  docType: "INVOICE",
+  code: makeCode("INVOICE"),
+  issueDate: new Date().toISOString().split("T")[0],
+  customerName: "",
+  customerEmail: "",
+  customerAddress: "",
+  items: [],
+  globalDiscount: 0,
+  globalTaxRate: 0,
+  retentionPreset: "NONE",
+  footerId: "v1-minimal",
+});
 
-  patchInvoice: (patch) => set(s => ({ invoice: { ...s.invoice, ...patch } })),
+const createDefaultTotals = (): Totals => ({
+  subtotal: 0,
+  tax: 0,
+  discount: 0,
+  retention: 0,
+  total: 0,
+});
 
-  setDocType: (t) => set(s => ({ invoice: { ...s.invoice, docType: t }})),
-  regenerateCode: () => set(s => ({ invoice: { ...s.invoice, code: codeFor(s.invoice.docType) } })),
-  setFooterId: (f) => set(s => ({ invoice: { ...s.invoice, footerId: f } })),
-  setGlobalTax: (p) => set(s => ({ invoice: { ...s.invoice, globalTaxRate: p }})),
-  setGlobalDiscount: (p) => set(s => ({ invoice: { ...s.invoice, globalDiscount: p }})),
-  setRetentionPreset: (r) => set(s => ({ invoice: { ...s.invoice, retentionPreset: r }})),
+const initialState = {
+  profiles: [createDefaultProfile()],
+  selectedProfileId: "",
+  invoice: createDefaultInvoice(),
+  totals: createDefaultTotals(),
+};
 
-  addItem: () => set(s => ({ invoice: { ...s.invoice, items: [...s.invoice.items, { id: nanoid(), title: "", qty:1, unitPrice:0 }] } })),
-  updateItem: (id, patch) => set(s => ({ invoice: { ...s.invoice, items: s.invoice.items.map(it => it.id===id ? { ...it, ...patch } : it) } })),
-  removeItem: (id) => set(s => ({ invoice: { ...s.invoice, items: s.invoice.items.filter(it => it.id!==id) } })),
+// Load persisted state
+const persistedState = load(initialState);
+// Ensure selectedProfileId is set
+if (!persistedState.selectedProfileId && persistedState.profiles.length > 0) {
+  persistedState.selectedProfileId = persistedState.profiles[0].id;
+}
 
-  addProfile: (p) => set(s => ({ profiles: [...s.profiles, { ...p, id: nanoid() }] })),
-  updateProfile: (id, patch) => set(s => ({ profiles: s.profiles.map(pr => pr.id===id ? { ...pr, ...patch } : pr) })),
-  deleteProfile: (id) => set(s => {
-    const left = s.profiles.filter(p => p.id !== id);
-    const sel = s.selectedProfileId === id ? left[0]?.id : s.selectedProfileId;
-    return { profiles: left, selectedProfileId: sel };
-  }),
-  selectProfile: (id) => set({ selectedProfileId: id }),
-  exportProfiles: () => JSON.stringify(get().profiles, null, 2),
+export const useInvoice = create<InvoiceStore>((set, get) => ({
+  ...persistedState,
+  
+  // Profile actions
+  selectProfile: (id: string) => {
+    set({ selectedProfileId: id });
+    save(get());
+  },
+  
+  addProfile: (profile: Partial<Profile>) => {
+    const newProfile: Profile = {
+      id: nanoid(),
+      name: profile.name || "New Profile",
+      businessName: profile.businessName || "",
+      currency: profile.currency || "USD",
+      locale: profile.locale || "en-US",
+      defaultFooterId: profile.defaultFooterId || "v1-minimal",
+      ...profile,
+    };
+    
+    set(state => ({
+      profiles: [...state.profiles, newProfile],
+      selectedProfileId: newProfile.id,
+    }));
+    save(get());
+  },
+  
+  updateProfile: (id: string, updates: Partial<Profile>) => {
+    set(state => ({
+      profiles: state.profiles.map(p => 
+        p.id === id ? { ...p, ...updates } : p
+      ),
+    }));
+    save(get());
+  },
+  
+  deleteProfile: (id: string) => {
+    const state = get();
+    const remainingProfiles = state.profiles.filter(p => p.id !== id);
+    
+    if (remainingProfiles.length === 0) {
+      // Create a new default profile if all profiles are deleted
+      const defaultProfile = createDefaultProfile();
+      set({
+        profiles: [defaultProfile],
+        selectedProfileId: defaultProfile.id,
+      });
+    } else {
+      const newSelectedId = state.selectedProfileId === id 
+        ? remainingProfiles[0].id 
+        : state.selectedProfileId;
+      set({
+        profiles: remainingProfiles,
+        selectedProfileId: newSelectedId,
+      });
+    }
+    save(get());
+  },
+  
+  exportProfiles: () => {
+    return JSON.stringify(get().profiles, null, 2);
+  },
+  
   importProfiles: (json: string) => {
     try {
-      const arr = JSON.parse(json) as Profile[];
-      set({ profiles: arr, selectedProfileId: arr[0]?.id });
-    } catch { /* ignore */ }
+      const profiles: Profile[] = JSON.parse(json);
+      if (Array.isArray(profiles) && profiles.length > 0) {
+        set({
+          profiles,
+          selectedProfileId: profiles[0].id,
+        });
+        save(get());
+      }
+    } catch (error) {
+      console.error("Failed to import profiles:", error);
+    }
   },
-
+  
+  // Invoice actions
+  setDocType: (docType: DocType) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        docType,
+        code: makeCode(docType),
+      },
+    }));
+    // Auto-recompute totals after docType change
+    get().compute();
+    save(get());
+  },
+  
+  regenerateCode: () => {
+    const state = get();
+    const newCode = makeCode(state.invoice.docType);
+    set({
+      invoice: {
+        ...state.invoice,
+        code: newCode,
+      },
+    });
+    // Auto-recompute totals after regeneration
+    get().compute();
+    save(get());
+  },
+  
+  patchInvoice: (updates: Partial<Invoice>) => {
+    set(state => ({
+      invoice: { ...state.invoice, ...updates },
+    }));
+    save(get());
+  },
+  
+  setFooterId: (footerId: FooterId) => {
+    set(state => ({
+      invoice: { ...state.invoice, footerId },
+    }));
+    save(get());
+  },
+  
+  setGlobalDiscount: (discount: number) => {
+    set(state => ({
+      invoice: { ...state.invoice, globalDiscount: discount },
+    }));
+    // Auto-recompute totals after discount change
+    get().compute();
+    save(get());
+  },
+  
+  setGlobalTax: (tax: number) => {
+    set(state => ({
+      invoice: { ...state.invoice, globalTaxRate: tax },
+    }));
+    // Auto-recompute totals after tax change
+    get().compute();
+    save(get());
+  },
+  
+  setRetentionPreset: (preset: RetentionPreset) => {
+    set(state => ({
+      invoice: { ...state.invoice, retentionPreset: preset },
+    }));
+    // Auto-recompute totals after retention change
+    get().compute();
+    save(get());
+  },
+  
+  // Item actions
+  addItem: () => {
+    const newItem: InvoiceItem = {
+      id: nanoid(),
+      title: "",
+      description: "",
+      qty: 1,
+      unitPrice: 0,
+      taxRate: undefined,
+      discount: undefined,
+    };
+    
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        items: [...state.invoice.items, newItem],
+      },
+    }));
+    // Auto-recompute totals after adding item
+    get().compute();
+    save(get());
+  },
+  
+  updateItem: (id: string, updates: Partial<InvoiceItem>) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        items: state.invoice.items.map(item =>
+          item.id === id ? { ...item, ...updates } : item
+        ),
+      },
+    }));
+    // Auto-recompute totals after updating item
+    get().compute();
+    save(get());
+  },
+  
+  removeItem: (id: string) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        items: state.invoice.items.filter(item => item.id !== id),
+      },
+    }));
+    // Auto-recompute totals after removing item
+    get().compute();
+    save(get());
+  },
+  
+  // Computation
   compute: () => {
-    const s = get();
-    const profile = s.profiles.find(p => p.id === s.selectedProfileId) ?? s.profiles[0];
-    const iv = s.invoice;
-    const sub = iv.items.reduce((a, it) => a + it.qty * it.unitPrice, 0);
-
-    const discLine = iv.items.reduce((a,it)=> a + (it.discount? (it.discount/100)*it.qty*it.unitPrice : 0), 0);
-    const discGlobal = (iv.globalDiscount ?? 0)/100 * (sub - discLine);
-    const baseAfterDisc = sub - discLine - discGlobal;
-
-    const taxRate = (iv.globalTaxRate ?? profile?.defaultTaxRate ?? 0) / 100;
-    const tax = baseAfterDisc * taxRate;
-
-    const retention = iv.retentionPreset === "AGENTE_RETENCION" ? baseAfterDisc * 0.02 : 0;
-    const total = baseAfterDisc + tax - retention;
-
-    const totals = { subTotal: sub, discount: discLine + discGlobal, tax, retention, total };
+    const state = get();
+    const { invoice, profiles, selectedProfileId } = state;
+    const profile = profiles.find(p => p.id === selectedProfileId) || profiles[0];
+    
+    let subtotal = 0;
+    let totalTax = 0;
+    let totalDiscount = 0;
+    
+    // Calculate item-by-item
+    invoice.items.forEach(item => {
+      const lineTotal = item.qty * item.unitPrice;
+      const itemDiscount = (item.discount || 0) / 100 * lineTotal;
+      const discountedAmount = lineTotal - itemDiscount;
+      const itemTaxRate = item.taxRate !== undefined ? item.taxRate : (invoice.globalTaxRate || profile.defaultTaxRate || 0);
+      const itemTax = itemTaxRate / 100 * discountedAmount;
+      
+      subtotal += lineTotal;
+      totalDiscount += itemDiscount;
+      totalTax += itemTax;
+    });
+    
+    // Apply global discount
+    const globalDiscountAmount = (invoice.globalDiscount || 0) / 100 * subtotal;
+    totalDiscount += globalDiscountAmount;
+    
+    // Calculate retention
+    let retention = 0;
+    const taxableAmount = subtotal - totalDiscount;
+    
+    if (invoice.retentionPreset === "AGENTE_RETENCION") {
+      retention = 0.02 * taxableAmount; // 2%
+    }
+    
+    const total = subtotal - totalDiscount + totalTax - retention;
+    
+    const totals: Totals = {
+      subtotal,
+      tax: totalTax,
+      discount: totalDiscount,
+      retention,
+      total: Math.max(0, total), // Ensure non-negative
+    };
+    
     set({ totals });
-    save({ ...get(), totals });
+    save(get());
   },
 }));

@@ -1,4 +1,4 @@
-import { useInvoice } from "../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 import { useState } from "react";
 
 export default function ProfileSelector() {

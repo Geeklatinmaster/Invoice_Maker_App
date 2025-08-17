@@ -1,4 +1,4 @@
-import { useInvoice } from "../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 import Footer from "./Footers";
 import { fmtCurrency } from "../lib/format";
 
