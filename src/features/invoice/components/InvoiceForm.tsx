@@ -1,5 +1,6 @@
 import { useInvoice } from "@/features/invoice/store/useInvoice";
 import { exportInvoicePdf } from "@/features/invoice/pdf/exportPdf";
+import ThemeSettingsPanel from "./ThemeSettings";
 
 // Helper functions
 async function fetchAsDataURL(url: string): Promise<string | undefined> {
@@ -36,6 +37,8 @@ export default function InvoiceForm() {
 
   return (
     <section style={{display:"grid", gap:8}}>
+      <ThemeSettingsPanel />
+      
       <div style={{display:"flex", gap:8, alignItems:"center"}}>
         <label>Doc:
           <select value={iv.docType} onChange={e=>s.setDocType(e.target.value as any)}>

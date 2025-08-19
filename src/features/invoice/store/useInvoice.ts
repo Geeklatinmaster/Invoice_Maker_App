@@ -1,7 +1,8 @@
 import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
 import { nanoid } from "nanoid";
 import { save, load } from "../lib/storage";
-import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset } from "../types/types";
+import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset, FooterSettings, ThemeSettings, LogoSettings, LogoSize, LogoAlign } from "../types/types";
 
 // Robust code generation helpers
 const rand = (n = 5) => Math.random().toString(36).slice(2, 2 + n).toUpperCase();
@@ -23,6 +24,7 @@ type InvoiceStore = {
   selectedProfileId: string;
   invoice: Invoice;
   totals: Totals;
+  renderVersion: number;
   
   // Profile actions
   selectProfile: (id: string) => void;
@@ -45,6 +47,20 @@ type InvoiceStore = {
   addItem: () => void;
   updateItem: (id: string, updates: Partial<InvoiceItem>) => void;
   removeItem: (id: string) => void;
+  
+  // Theme/Footer/Logo actions
+  setFooter: (footerSettings: FooterSettings) => void;
+  setTheme: (themeSettings: ThemeSettings) => void;
+  setLogo: (logoSettings: LogoSettings) => void;
+  
+  // Granular live update actions
+  updateLogoSize: (size: LogoSize) => void;
+  updateLogoAlign: (align: LogoAlign) => void;
+  updateLogoUrl: (url: string) => void;
+  updateBrandPrimary: (color: string) => void;
+  updateBrandSecondary: (color: string) => void;
+  updateBackground: (color: string) => void;
+  updateBaseFontSize: (size: number) => void;
   
   // Computation
   compute: () => void;
@@ -87,6 +103,7 @@ const initialState = {
   selectedProfileId: "",
   invoice: createDefaultInvoice(),
   totals: createDefaultTotals(),
+  renderVersion: 0,
 };
 
 // Load persisted state
@@ -96,7 +113,8 @@ if (!persistedState.selectedProfileId && persistedState.profiles.length > 0) {
   persistedState.selectedProfileId = persistedState.profiles[0].id;
 }
 
-export const useInvoice = create<InvoiceStore>((set, get) => ({
+export const useInvoice = create<InvoiceStore>()(
+  subscribeWithSelector((set, get) => ({
   ...persistedState,
   
   // Profile actions
@@ -292,6 +310,43 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     save(get());
   },
   
+  // Theme/Footer/Logo actions
+  setFooter: (footerSettings: FooterSettings) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        state.profiles[profileIdx].footer = { ...(state.profiles[profileIdx].footer || {}), ...footerSettings };
+      }
+      state.renderVersion++;
+      save(state);
+      return state;
+    });
+  },
+  
+  setTheme: (themeSettings: ThemeSettings) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        state.profiles[profileIdx].theme = { ...(state.profiles[profileIdx].theme || {}), ...themeSettings };
+      }
+      state.renderVersion++;
+      save(state);
+      return state;
+    });
+  },
+  
+  setLogo: (logoSettings: LogoSettings) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        state.profiles[profileIdx].logo = { ...(state.profiles[profileIdx].logo || {}), ...logoSettings };
+      }
+      state.renderVersion++;
+      save(state);
+      return state;
+    });
+  },
+  
   // Computation
   compute: () => {
     const state = get();
@@ -340,4 +395,134 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     set({ totals });
     save(get());
   },
-}));
+  
+  // Granular live update actions
+  updateLogoSize: (size: LogoSize) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        const currentTheme = state.profiles[profileIdx].theme || {};
+        state.profiles[profileIdx].theme = { ...currentTheme, logoSize: size };
+      }
+      state.renderVersion++;
+      return state;
+    });
+    save(get());
+  },
+  
+  updateLogoAlign: (align: LogoAlign) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        const currentTheme = state.profiles[profileIdx].theme || {};
+        state.profiles[profileIdx].theme = { ...currentTheme, logoAlign: align };
+      }
+      state.renderVersion++;
+      return state;
+    });
+    save(get());
+  },
+  
+  updateLogoUrl: (url: string) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        const currentLogo = state.profiles[profileIdx].logo || {};
+        state.profiles[profileIdx].logo = { ...currentLogo, logoUrl: url, logoDataUrl: undefined };
+      }
+      state.renderVersion++;
+      return state;
+    });
+    save(get());
+  },
+  
+  updateBrandPrimary: (color: string) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        const currentTheme = state.profiles[profileIdx].theme || {};
+        state.profiles[profileIdx].theme = { ...currentTheme, brandPrimary: color };
+      }
+      state.renderVersion++;
+      return state;
+    });
+    save(get());
+  },
+  
+  updateBrandSecondary: (color: string) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        const currentTheme = state.profiles[profileIdx].theme || {};
+        state.profiles[profileIdx].theme = { ...currentTheme, brandSecondary: color };
+      }
+      state.renderVersion++;
+      return state;
+    });
+    save(get());
+  },
+  
+  updateBackground: (color: string) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        const currentTheme = state.profiles[profileIdx].theme || {};
+        state.profiles[profileIdx].theme = { ...currentTheme, background: color };
+      }
+      state.renderVersion++;
+      return state;
+    });
+    save(get());
+  },
+  
+  updateBaseFontSize: (size: number) => {
+    set(state => {
+      const profileIdx = state.profiles.findIndex(p => p.id === state.selectedProfileId);
+      if (profileIdx >= 0) {
+        const currentTheme = state.profiles[profileIdx].theme || {};
+        state.profiles[profileIdx].theme = { ...currentTheme, baseFontPx: size };
+      }
+      state.renderVersion++;
+      return state;
+    });
+    save(get());
+  },
+})));
+
+// Memoized selectors for granular subscriptions  
+export const useLogoSettings = () => useInvoice((state) => {
+  const profile = state.profiles.find(p => p.id === state.selectedProfileId);
+  return {
+    logo: profile?.logo || {},
+    logoSize: profile?.theme?.logoSize || 'md' as const,
+    logoAlign: profile?.theme?.logoAlign || 'left' as const,
+  };
+});
+
+export const useColorSettings = () => useInvoice((state) => {
+  const profile = state.profiles.find(p => p.id === state.selectedProfileId);
+  const theme = profile?.theme || {};
+  return {
+    brandPrimary: theme.brandPrimary || '#3b82f6',
+    brandSecondary: theme.brandSecondary || '#64748b',
+    background: theme.background || '#ffffff',
+    text: theme.text || '#1f2937',
+    muted: theme.muted || '#6b7280',
+    accent: theme.accent || '#f59e0b',
+  };
+});
+
+export const useThemeSettings = () => useInvoice((state) => {
+  const profile = state.profiles.find(p => p.id === state.selectedProfileId);
+  const theme = profile?.theme || {};
+  return {
+    fontFamily: theme.fontFamily || 'system-ui',
+    fontWeight: theme.fontWeight || 'Normal' as const,
+    baseFontPx: theme.baseFontPx || 14,
+    density: theme.density || 'normal' as const,
+    separators: theme.separators || 'lines' as const,
+    totalsAlign: theme.totalsAlign || 'right' as const,
+  };
+});
+
+export const useRenderVersion = () => useInvoice(state => state.renderVersion);

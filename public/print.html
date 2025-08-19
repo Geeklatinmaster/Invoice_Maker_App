@@ -1,21 +1,31 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
     <title>Invoice Print</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
-      h1 { margin: 0 0 16px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-      th, td { border-bottom: 1px solid #ddd; padding: 6px 8px; text-align: left; }
-      tfoot td { font-weight: 600; }
-      .row { display:flex; gap:32px; justify-content: space-between; }
-      .col { min-width: 280px; }
-      .muted { color:#666; font-size:12px; margin-top:16px; }
+      :root{
+        --brand-primary:#2d3e8b; --brand-secondary:#9bb3d4; --text:#111; --bg:#fff; --muted:#6b7280; --accent:#427bff; --base-size:15px;
+      }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:24px; background:var(--bg); color:var(--text); font-size: var(--base-size); }
+      h1 { margin:0 0 16px; color: var(--brand-primary); }
+      table { width:100%; border-collapse:collapse; margin-top:16px }
+      th,td { border-bottom:1px solid #ddd; padding:6px 8px; text-align:left }
+      th { background-color: var(--brand-primary); color: white; font-weight: bold; }
+      tfoot td { font-weight:600 }
+      .row { display:flex; gap:32px; justify-content:space-between; align-items:flex-start }
+      .col { min-width:280px }
+      .muted { color:var(--muted); font-size:12px; margin-top:16px }
+      .totals-right td { text-align:right }
+      .stripe tbody tr:nth-child(even){ background: color-mix(in srgb, var(--brand-secondary) 12%, transparent) }
+      .sep-underline th, .sep-underline td { border-bottom:1px solid currentColor }
+      .footer-section { margin-top: 40px; padding-top: 10px; font-size: 12px; color: var(--muted); }
+      .color-bar { margin-bottom: 8px; }
     </style>
   </head>
   <body>
+    <div id="logoHolder" style="display:flex; justify-content:flex-start; margin-bottom:12px"></div>
     <h1 id="title">Invoice</h1>
     <div class="row">
       <div class="col" id="vendor"></div>
@@ -28,49 +38,98 @@
       <tbody></tbody>
       <tfoot id="totals"></tfoot>
     </table>
-    <div class="muted">Static print view</div>
+    <div class="footer-section" id="footerNotes"></div>
     <script>
-      function fmtMoney(n, currency){ try{ return new Intl.NumberFormat(undefined,{style:'currency',currency}).format(+n||0) }catch(e){ return (currency||'USD')+' '+(Number(n||0)).toFixed(2)}}
+      const LOGO_PX = { sm:36, md:64, lg:92 };
       const snap = localStorage.getItem("invoice:last");
       if(!snap){ document.body.innerHTML = "<p>No invoice data found. Export from the app first.</p>"; }
       else {
         const { invoice, totals, profile } = JSON.parse(snap);
-        const titleEl = document.getElementById("title");
-        titleEl.textContent = (invoice?.docType || "INVOICE") + (invoice?.code ? " • " + invoice.code : "");
+        const theme  = (profile && profile.theme)  || {};
+        const footer = (profile && profile.footer) || {};
+        const logo   = (profile && profile.logo)   || {};
+
+        // CSS vars
+        const r = document.documentElement;
+        r.style.setProperty("--brand-primary", theme.brandPrimary || "#2d3e8b");
+        r.style.setProperty("--brand-secondary", theme.brandSecondary || "#9bb3d4");
+        r.style.setProperty("--text", theme.text || "#111");
+        r.style.setProperty("--bg", theme.background || "#fff");
+        r.style.setProperty("--muted", theme.muted || "#6b7280");
+        r.style.setProperty("--accent", theme.accent || "#427bff");
+        r.style.setProperty("--base-size", (theme.baseFontPx || 15) + "px");
+
+        // Logo
+        const logoUrl = (logo && (logo.logoDataUrl || logo.logoUrl)) || "";
+        if (logoUrl) {
+          const img = new Image();
+          img.src = logoUrl;
+          img.style.height = (LOGO_PX[theme.logoSize || "lg"] || 92) + "px";
+          img.style.width = "auto";
+          img.style.objectFit = "contain";
+          const holder = document.getElementById("logoHolder");
+          holder.style.justifyContent =
+            theme.logoAlign === "right" ? "flex-end" :
+            theme.logoAlign === "center" ? "center" : "flex-start";
+          holder.appendChild(img);
+        }
+
+        // Title + vendor/client
+        document.getElementById("title").textContent = (invoice?.docType || "INVOICE") + (invoice?.code ? " • " + invoice.code : "");
         const vendor = document.getElementById("vendor");
         if (profile) {
-          vendor.innerHTML = `
-            <strong>${profile.businessName || ""}</strong><br/>
-            ${profile.address || ""}<br/>
-            ${profile.email || ""} ${profile.phone ? " • "+profile.phone : ""}`;
+          vendor.innerHTML = `<strong>${profile.businessName || ""}</strong><br/>${profile.address || ""}<br/>${profile.email || ""} ${profile.phone ? " • "+profile.phone : ""}`;
         }
         const client = document.getElementById("client");
-        const customer = invoice?.customer || {};
-        client.innerHTML = `
-          <strong>Customer</strong><br/>
-          ${customer?.name || ""}<br/>
-          ${customer?.email || ""} ${customer?.phone ? " • "+customer.phone : ""}`;
-        const tbody = document.querySelector("#items tbody");
-        (invoice?.items || []).forEach((it, idx) => {
+        const c = invoice?.customer || {};
+        client.innerHTML = `<strong>Customer</strong><br/>${c?.name || invoice?.customerName || ""}<br/>${c?.email || invoice?.customerEmail || ""} ${c?.phone ? " • "+c.phone : ""}`;
+
+        // Items
+        const fmt = (n, cur) => { try { return new Intl.NumberFormat(undefined,{style:'currency',currency:cur}).format(+n||0) } catch { return (cur||'USD')+' '+(Number(n||0)).toFixed(2) } };
+        const tb = document.querySelector("#items tbody");
+        (invoice?.items || []).forEach((it, i) => {
+          const q = Number(it?.qty||it?.quantity||1)||1;
+          const u = Number(it?.unitPrice||it?.price||0)||0;
           const tr = document.createElement("tr");
-          const qty = Number(it?.qty||it?.quantity||1)||1;
-          const unit = Number(it?.unitPrice||it?.price||0)||0;
-          const total = qty*unit;
-          tr.innerHTML = `
-            <td>${idx+1}</td>
-            <td>${it?.description || it?.title || ""}</td>
-            <td>${qty}</td>
-            <td>${fmtMoney(unit, invoice?.currency || "USD")}</td>
-            <td>${fmtMoney(total, invoice?.currency || "USD")}</td>`;
-          tbody.appendChild(tr);
+          tr.innerHTML = `<td>${i+1}</td><td>${it?.description || it?.title || ""}</td><td>${q}</td><td>${fmt(u, invoice?.currency || "USD")}</td><td>${fmt(q*u, invoice?.currency || "USD")}</td>`;
+          tb.appendChild(tr);
         });
-        const tfoot = document.getElementById("totals");
+
+        // Styling table per theme
+        if (theme.altRowStripesOn) document.getElementById("items").classList.add("stripe");
+        if (theme.separators === "underline") document.getElementById("items").classList.add("sep-underline");
+        if ((theme.totalsAlign || "right") === "right") document.getElementById("items").classList.add("totals-right");
+
+        // Totals
+        const tf = document.getElementById("totals");
         if (totals) {
-          tfoot.innerHTML = `
-            <tr><td colspan="4" style="text-align:right">Subtotal</td><td>${fmtMoney(totals.subtotal ?? totals.subTotal ?? 0, invoice?.currency || "USD")}</td></tr>
-            <tr><td colspan="4" style="text-align:right">Discount</td><td>${fmtMoney(totals.discount ?? 0, invoice?.currency || "USD")}</td></tr>
-            <tr><td colspan="4" style="text-align:right">Tax</td><td>${fmtMoney(totals.tax ?? 0, invoice?.currency || "USD")}</td></tr>
-            <tr><td colspan="4" style="text-align:right"><strong>Total</strong></td><td><strong>${fmtMoney(totals.total ?? 0, invoice?.currency || "USD")}</strong></td></tr>`;
+          tf.innerHTML =
+            `<tr><td colspan="4" style="text-align:right">Subtotal</td><td>${fmt(totals.subtotal ?? totals.subTotal ?? 0, invoice?.currency || "USD")}</td></tr>
+             <tr><td colspan="4" style="text-align:right">Discount</td><td>${fmt(totals.discount ?? 0, invoice?.currency || "USD")}</td></tr>
+             <tr><td colspan="4" style="text-align:right">Tax</td><td>${fmt(totals.tax ?? 0, invoice?.currency || "USD")}</td></tr>
+             <tr><td colspan="4" style="text-align:right"><strong>Total</strong></td><td><strong>${fmt(totals.total ?? 0, invoice?.currency || "USD")}</strong></td></tr>`;
+        }
+
+        // Footer
+        const fn = document.getElementById("footerNotes");
+        const lines = [
+          footer.notes || "",
+          footer.contact || "",
+          footer.socialsCsv || "",
+          footer.legal || ""
+        ].filter(Boolean);
+        
+        if (lines.length > 0) {
+          // Color bar
+          if (footer.colorBarOn && footer.colorBarHeightPx) {
+            const colorBar = document.createElement('div');
+            colorBar.className = 'color-bar';
+            colorBar.style.height = footer.colorBarHeightPx + 'px';
+            colorBar.style.backgroundColor = theme.brandPrimary || '#2d3e8b';
+            fn.appendChild(colorBar);
+          }
+          
+          fn.innerHTML += lines.join(" • ");
         }
       }
     </script>

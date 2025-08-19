@@ -11,6 +11,7 @@ declare module "jspdf" {
     setFont(style?: string, variant?: string, weight?: string): void;
     setLineWidth(width: number): void;
     setDrawColor(r: number, g?: number, b?: number): void;
+    setFillColor(r: number, g?: number, b?: number): void;
     rect(x: number, y: number, w: number, h: number, style?: string): void;
     addPage(): void;
     getTextWidth(txt: string): number;

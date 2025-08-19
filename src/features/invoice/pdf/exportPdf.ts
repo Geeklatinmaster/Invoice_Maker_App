@@ -70,6 +70,11 @@ const computeTotalsFromInvoice = (invoice: Invoice, profile?: Profile): Totals =
 export async function exportInvoicePdf(invoice: Invoice, opts: ExportOptions = {}) {
   const { profile, totals, logoDataUrl } = opts;
   
+  // Extract theme settings from profile
+  const theme = profile?.theme || {};
+  const footer = profile?.footer || {};
+  const logo = profile?.logo || {};
+  
   // Create PDF document
   const doc = new jsPDF({
     unit: "mm",
@@ -85,6 +90,13 @@ export async function exportInvoicePdf(invoice: Invoice, opts: ExportOptions = {
   const marginTop = 18;
   const marginBottom = 18;
   const usableWidth = pageWidth - marginLeft - marginRight;
+  
+  // Apply theme colors
+  const brandPrimary = theme.brandPrimary || "#2980b9";
+  const baseFontSize = theme.baseFontPx || 12;
+  const density = theme.density || "normal";
+  const fontFamily = theme.fontFamily || "helvetica";
+  const fontWeight = theme.fontWeight || "Normal";
 
   let yPos = marginTop;
 
@@ -99,12 +111,24 @@ export async function exportInvoicePdf(invoice: Invoice, opts: ExportOptions = {
   doc.setFont("helvetica", "normal");
   doc.text(`Code: ${safeTxt(invoice.code)}`, marginLeft, yPos);
 
-  // Logo (if provided)
-  if (logoDataUrl) {
+  // Logo (prioritize logoDataUrl from profile's logo settings)
+  const finalLogoDataUrl = logo.logoDataUrl || logoDataUrl || logo.logoUrl;
+  if (finalLogoDataUrl) {
     try {
-      const logoX = pageWidth - marginRight - 48;
+      const logoSize = theme.logoSize || "md";
+      const logoAlign = theme.logoAlign || "right";
+      
+      // Size mapping
+      const sizeMap = { sm: [32, 16], md: [48, 24], lg: [64, 32] } as Record<string, [number, number]>;
+      const [logoWidth, logoHeight] = sizeMap[logoSize] || sizeMap.md;
+      
+      // Position mapping
+      let logoX = pageWidth - marginRight - logoWidth; // default right
+      if (logoAlign === "left") logoX = marginLeft;
+      if (logoAlign === "center") logoX = (pageWidth - logoWidth) / 2;
+      
       const logoY = marginTop - 5;
-      doc.addImage(logoDataUrl, "PNG", logoX, logoY, 48, 24);
+      doc.addImage(finalLogoDataUrl, "PNG", logoX, logoY, logoWidth, logoHeight);
     } catch (e) {
       console.warn("Failed to add logo to PDF:", e);
     }
@@ -206,20 +230,34 @@ export async function exportInvoicePdf(invoice: Invoice, opts: ExportOptions = {
     fmtCurrency(computeLineTotal(item), profile?.currency || "USD", profile?.locale || "en-US")
   ]);
 
+  // Convert hex color to RGB for jsPDF
+  const hexToRgb = (hex: string): [number, number, number] => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [
+      parseInt(result[1], 16),
+      parseInt(result[2], 16),
+      parseInt(result[3], 16)
+    ] : [41, 128, 185]; // fallback blue
+  };
+  
+  const primaryRgb = hexToRgb(brandPrimary);
+  const cellPadding = density === "compact" ? 2 : density === "relaxed" ? 4 : 3;
+  const tableFontSize = Math.max(8, baseFontSize - 3);
+  
   (doc as any).autoTable({
     startY: yPos,
     head: [["#", "Description", "Qty", "Unit Price", "Line Total"]],
     body: tableData,
-    theme: "striped",
+    theme: theme.altRowStripesOn ? "striped" : "grid",
     headStyles: {
-      fillColor: [41, 128, 185],
+      fillColor: primaryRgb,
       textColor: 255,
       fontStyle: "bold",
-      fontSize: 10
+      fontSize: tableFontSize + 1
     },
     bodyStyles: {
-      fontSize: 9,
-      cellPadding: 3
+      fontSize: tableFontSize,
+      cellPadding: cellPadding
     },
     columnStyles: {
       0: { cellWidth: 15, halign: "center" },
@@ -240,20 +278,59 @@ export async function exportInvoicePdf(invoice: Invoice, opts: ExportOptions = {
       const textWidth = doc.getTextWidth(pageText);
       doc.text(pageText, (pageWidth - textWidth) / 2, pageHeight - 10);
       
-      // Footer note
-      doc.text("Generated with Invoice Maker App", marginLeft, pageHeight - 10);
+      // Footer implementation
+      let footerY = pageHeight - 25;
+      
+      // Color bar (if enabled)
+      if (footer.colorBarOn && footer.colorBarHeightPx) {
+        doc.setFillColor(...primaryRgb);
+        doc.rect(marginLeft, footerY - footer.colorBarHeightPx, usableWidth, footer.colorBarHeightPx, "F");
+        footerY -= footer.colorBarHeightPx + 3;
+      }
+      
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      
+      // Footer content based on layout
+      if (footer.layout === "corporate") {
+        if (footer.notes) {
+          doc.text(footer.notes, marginLeft, footerY);
+          footerY -= 3;
+        }
+        if (footer.contact) {
+          doc.text(footer.contact, marginLeft, footerY);
+          footerY -= 3;
+        }
+        if (footer.legal) {
+          doc.text(footer.legal, marginLeft, footerY);
+          footerY -= 3;
+        }
+      } else {
+        // Simple layout - just notes and contact
+        if (footer.notes) {
+          doc.text(footer.notes, marginLeft, footerY);
+          footerY -= 3;
+        }
+        if (footer.contact) {
+          doc.text(footer.contact, marginLeft, footerY);
+        }
+      }
     }
   });
 
   // Get final Y position after table
   const finalY = (doc as any).lastAutoTable.finalY || yPos + 50;
 
-  // Totals box (right-aligned)
+  // Totals box (respecting theme alignment)
   const calculatedTotals = totals || computeTotalsFromInvoice(invoice, profile);
   const currency = profile?.currency || "USD";
   const locale = profile?.locale || "en-US";
   
-  const totalsX = pageWidth - marginRight - 60;
+  const totalsAlign = theme.totalsAlign || "right";
+  let totalsX = pageWidth - marginRight - 60; // default right
+  if (totalsAlign === "left") totalsX = marginLeft;
+  if (totalsAlign === "center") totalsX = (pageWidth - 60) / 2;
+  
   let totalsY = finalY + 15;
   
   // Check if we need a new page for totals
