@@ -24,8 +24,8 @@ export default function ThemeSettingsPanel() {
   const footer = profile.footer || {};
 
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleLogoUpload = async (e: React.FormEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
     if (!file) return;
     
     try {
@@ -164,7 +164,7 @@ export default function ThemeSettingsPanel() {
               <input 
                 type="file" 
                 accept="image/*" 
-                onChange={handleLogoUpload}
+                onInput={handleLogoUpload}
               />
             </label>
             <span>or</span>
@@ -224,7 +224,7 @@ export default function ThemeSettingsPanel() {
             Footer Layout:
             <select 
               value={footer.layout || "simple"} 
-              onChange={e => s.setFooter({ layout: e.target.value as any })}
+              onInput={e => s.setFooter({ layout: e.currentTarget.value as any })}
             >
               <option value="simple">Simple</option>
               <option value="corporate">Corporate</option>
@@ -235,7 +235,7 @@ export default function ThemeSettingsPanel() {
             Notes:
             <textarea 
               value={footer.notes || ""} 
-              onChange={e => s.setFooter({ notes: e.target.value })}
+              onInput={e => s.setFooter({ notes: e.currentTarget.value })}
               placeholder="Additional notes or terms..."
               rows={3}
             />
@@ -245,7 +245,7 @@ export default function ThemeSettingsPanel() {
             Contact Info:
             <input 
               value={footer.contact || ""} 
-              onChange={e => s.setFooter({ contact: e.target.value })}
+              onInput={e => s.setFooter({ contact: e.currentTarget.value })}
               placeholder="www.company.com | +1-555-123-4567"
             />
           </label>
@@ -254,7 +254,7 @@ export default function ThemeSettingsPanel() {
             Social Media:
             <input 
               value={footer.socialsCsv || ""} 
-              onChange={e => s.setFooter({ socialsCsv: e.target.value })}
+              onInput={e => s.setFooter({ socialsCsv: e.currentTarget.value })}
               placeholder="Instagram @handle, YouTube @channel"
             />
           </label>
@@ -264,7 +264,7 @@ export default function ThemeSettingsPanel() {
               Legal Text:
               <textarea 
                 value={footer.legal || ""} 
-                onChange={e => s.setFooter({ legal: e.target.value })}
+                onInput={e => s.setFooter({ legal: e.currentTarget.value })}
                 placeholder="Legal disclaimers, terms, etc..."
                 rows={2}
               />
@@ -276,7 +276,7 @@ export default function ThemeSettingsPanel() {
               <input 
                 type="checkbox" 
                 checked={footer.colorBarOn || false}
-                onChange={e => s.setFooter({ colorBarOn: e.target.checked })}
+                onInput={e => s.setFooter({ colorBarOn: e.currentTarget.checked })}
               />
               Color Bar
             </label>
@@ -288,7 +288,7 @@ export default function ThemeSettingsPanel() {
                   min="1" 
                   max="20" 
                   value={footer.colorBarHeightPx || 4} 
-                  onChange={e => s.setFooter({ colorBarHeightPx: parseInt(e.target.value) })}
+                  onInput={e => s.setFooter({ colorBarHeightPx: parseInt(e.currentTarget.value) })}
                   style={{ width: "60px" }}
                 />
               </label>
