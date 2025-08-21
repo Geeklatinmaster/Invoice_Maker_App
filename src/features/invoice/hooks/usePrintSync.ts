@@ -1,86 +1,142 @@
 import { useEffect } from 'react';
-import { useColorSettings, useThemeSettings, useLogoSettings } from '../store/useInvoice';
+import { useCustomizerSettings } from '@/features/invoice/store/useInvoice';
 
-const STYLE_ID = 'invoice-print-styles';
-
-export function usePrintSync() {
-  const colorSettings = useColorSettings();
-  const themeSettings = useThemeSettings();
-  const logoSettings = useLogoSettings();
+export const usePrintSync = () => {
+  const customizer = useCustomizerSettings();
 
   useEffect(() => {
-    let styleElement = document.getElementById(STYLE_ID) as HTMLStyleElement;
-    
-    if (!styleElement) {
-      styleElement = document.createElement('style');
-      styleElement.id = STYLE_ID;
-      document.head.appendChild(styleElement);
+    const styleId = 'dynamic-print-styles';
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
     }
 
-    const logoSizePx = logoSettings.logoSize === 'sm' ? '36px' : 
-                       logoSettings.logoSize === 'md' ? '64px' : '92px';
+    const justify =
+      customizer.logoPosition === 'left'
+        ? 'flex-start'
+        : customizer.logoPosition === 'center'
+        ? 'center'
+        : 'flex-end';
 
-    const printCSS = `
+    styleEl.textContent = `
       @media print {
         body {
-          font-family: ${themeSettings.fontFamily} !important;
-          font-size: ${themeSettings.baseFontPx}px !important;
-          color: ${colorSettings.text} !important;
-          background: ${colorSettings.background} !important;
-          line-height: ${themeSettings.density === 'compact' ? '1.2' : 
-                         themeSettings.density === 'relaxed' ? '1.6' : '1.4'} !important;
+          font-family: system-ui !important;
+          font-size: ${customizer.fontSize.body}px !important;
+          color: ${customizer.colors.text} !important;
+          background: ${customizer.colors.background} !important;
+          line-height: 1.4 !important;
         }
         
         .invoice-preview {
-          --brand-primary: ${colorSettings.brandPrimary} !important;
-          --brand-secondary: ${colorSettings.brandSecondary} !important;
-          --text: ${colorSettings.text} !important;
-          --muted: ${colorSettings.muted} !important;
-          --bg: ${colorSettings.background} !important;
-          --accent: ${colorSettings.accent} !important;
+          padding: ${customizer.margins.top}px ${customizer.margins.right}px ${customizer.margins.bottom}px ${customizer.margins.left}px !important;
+          color: ${customizer.colors.text} !important;
+          background: ${customizer.colors.background} !important;
+          border: none !important;
+          min-height: auto !important;
         }
         
         .invoice-logo {
-          height: ${logoSizePx} !important;
-          justify-content: ${logoSettings.logoAlign === 'right' ? 'flex-end' : 
-                           logoSettings.logoAlign === 'center' ? 'center' : 'flex-start'} !important;
+          justify-content: ${justify} !important;
+          margin-bottom: 12px !important;
+        }
+        
+        .invoice-logo img {
+          width: ${customizer.logoSize}% !important;
+          height: auto !important;
+          max-width: 100% !important;
+          object-fit: contain !important;
+        }
+        
+        .invoice-preview h1 {
+          font-size: ${customizer.fontSize.title}px !important;
+          color: ${customizer.colors.primary} !important;
+          margin: 0 0 8px 0 !important;
+        }
+        
+        .invoice-preview p {
+          font-size: ${customizer.fontSize.body}px !important;
+        }
+        
+        .invoice-table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin-top: 16px !important;
         }
         
         .invoice-table th {
-          background-color: ${colorSettings.brandPrimary} !important;
-          padding: ${themeSettings.density === 'compact' ? '4px 6px' : 
-                    themeSettings.density === 'relaxed' ? '10px 12px' : '6px 8px'} !important;
-          font-size: ${themeSettings.baseFontPx - 1}px !important;
+          background-color: ${customizer.colors.primary} !important;
+          color: white !important;
+          padding: 6px 8px !important;
+          font-size: ${customizer.fontSize.body - 1}px !important;
+          font-weight: bold !important;
         }
         
         .invoice-table td {
-          padding: ${themeSettings.density === 'compact' ? '3px 6px' : 
-                    themeSettings.density === 'relaxed' ? '8px 12px' : '5px 8px'} !important;
-          border-bottom: ${themeSettings.separators === 'lines' ? '1px solid #ddd' : 
-                         themeSettings.separators === 'underline' ? '1px solid #ccc' : 'none'} !important;
+          padding: 5px 8px !important;
+          border-bottom: 1px solid #ddd !important;
+          font-size: ${customizer.fontSize.body}px !important;
         }
         
         .invoice-totals {
-          text-align: ${themeSettings.totalsAlign} !important;
-          font-size: ${themeSettings.baseFontPx + 1}px !important;
+          margin-top: 16px !important;
+          text-align: right !important;
+          font-size: ${customizer.fontSize.body + 1}px !important;
         }
         
         .invoice-total-row {
-          border-top: 2px solid ${colorSettings.brandPrimary} !important;
-          font-size: ${themeSettings.baseFontPx + 2}px !important;
+          border-top: 2px solid ${customizer.colors.primary} !important;
+          font-size: ${customizer.fontSize.body + 2}px !important;
+          font-weight: bold !important;
         }
         
         .invoice-footer {
-          font-size: ${themeSettings.baseFontPx - 2}px !important;
-          color: ${colorSettings.muted} !important;
+          font-size: ${customizer.fontSize.small}px !important;
+          color: #6b7280 !important;
+          margin-top: 24px !important;
         }
         
         .invoice-color-bar {
-          background-color: ${colorSettings.brandPrimary} !important;
+          background-color: ${customizer.colors.primary} !important;
+        }
+        
+        /* Hide non-printable elements */
+        .no-print,
+        button,
+        input[type="button"],
+        input[type="submit"],
+        input[type="reset"] {
+          display: none !important;
+        }
+        
+        /* Ensure proper page breaks */
+        .invoice-preview {
+          page-break-inside: avoid !important;
+        }
+        
+        .invoice-table {
+          page-break-inside: auto !important;
+        }
+        
+        .invoice-table tr {
+          page-break-inside: avoid !important;
+          page-break-after: auto !important;
+        }
+        
+        .invoice-totals {
+          page-break-inside: avoid !important;
         }
       }
     `;
 
-    styleElement.textContent = printCSS;
-  }, [colorSettings, themeSettings, logoSettings]);
-}
+    // Cleanup: elimina el nodo al desmontar para no apilar estilos en HMR/navegación
+    return () => {
+      if (styleEl && styleEl.parentNode) {
+        styleEl.parentNode.removeChild(styleEl);
+      }
+    };
+  }, [customizer]);
+};

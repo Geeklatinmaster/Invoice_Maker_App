@@ -1,4 +1,5 @@
-import { useInvoice, useColorSettings, useLogoSettings, useThemeSettings } from "@/features/invoice/store/useInvoice";
+import { useState, useRef } from 'react';
+import { useInvoice, useCustomizerSettings } from "@/features/invoice/store/useInvoice";
 import type { ThemeSettings, FooterSettings, LogoSettings } from "@/features/invoice/types/types";
 
 function toast(msg: string) { try { alert(msg); } catch {} }
@@ -13,24 +14,68 @@ async function fileToDataURL(file: File): Promise<string> {
 }
 
 export default function ThemeSettingsPanel() {
+  const {
+    customizer,
+    updateCustomizerLogoSize,
+    updateLogoPosition,
+    updateMargins,
+    updateColors,
+    updateFontSize,
+    // Original theme actions for legacy support
+    setLogo,
+    setFooter,
+    setTheme,
+    updateBrandPrimary,
+    updateBrandSecondary,
+    updateBackground,
+    updateBaseFontSize,
+  } = useInvoice((s) => ({
+    customizer: s.customizer,
+    updateCustomizerLogoSize: s.updateCustomizerLogoSize,
+    updateLogoPosition: s.updateLogoPosition,
+    updateMargins: s.updateMargins,
+    updateColors: s.updateColors,
+    updateFontSize: s.updateFontSize,
+    setLogo: s.setLogo,
+    setFooter: s.setFooter,
+    setTheme: s.setTheme,
+    updateBrandPrimary: s.updateBrandPrimary,
+    updateBrandSecondary: s.updateBrandSecondary,
+    updateBackground: s.updateBackground,
+    updateBaseFontSize: s.updateBaseFontSize,
+  }));
+
   const s = useInvoice();
-  const colorSettings = useColorSettings();
-  const logoSettings = useLogoSettings();
-  const themeSettings = useThemeSettings();
   const profile = s.profiles.find(p => p.id === s.selectedProfileId) ?? s.profiles[0];
   
   if (!profile) return null;
   
   const footer = profile.footer || {};
 
+  // Estado local para inputs de texto/number
+  const [titleSize, setTitleSize] = useState(customizer.fontSize.title);
+  const [bodySize, setBodySize] = useState(customizer.fontSize.body);
+  const [smallSize, setSmallSize] = useState(customizer.fontSize.small);
+  const [topMargin, setTopMargin] = useState(customizer.margins.top);
+  const [rightMargin, setRightMargin] = useState(customizer.margins.right);
+  const [bottomMargin, setBottomMargin] = useState(customizer.margins.bottom);
+  const [leftMargin, setLeftMargin] = useState(customizer.margins.left);
 
-  const handleLogoUpload = async (e: React.FormEvent<HTMLInputElement>) => {
-    const file = e.currentTarget.files?.[0];
+  // rAF para suavizar sliders en equipos lentos
+  const rafRef = useRef<number | null>(null);
+  const onLogoSizeInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const next = Number((e.currentTarget as HTMLInputElement).value);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => updateCustomizerLogoSize(next));
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     
     try {
       const dataUrl = await fileToDataURL(file);
-      s.setLogo({ logoDataUrl: dataUrl, logoUrl: undefined });
+      setLogo({ logoDataUrl: dataUrl, logoUrl: undefined });
       toast("Logo uploaded successfully!");
     } catch (error) {
       console.error("Logo upload failed:", error);
@@ -44,40 +89,177 @@ export default function ThemeSettingsPanel() {
         🎨 Advanced Theme & Design Settings
       </summary>
       
-      {/* Theme Settings */}
+      {/* NEW CUSTOMIZER SETTINGS */}
+      <fieldset style={{ marginBottom: 12, padding: 8, border: "2px solid #4ade80", borderRadius: 4 }}>
+        <legend style={{ color: "#16a34a", fontWeight: "bold" }}>✨ Live Customizer (Instant Updates)</legend>
+        
+        {/* Logo Settings */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 8, marginBottom: 12 }}>
+          <label>
+            Logo Size: {customizer.logoSize}%
+            <input
+              type="range"
+              min={10}
+              max={200}
+              value={customizer.logoSize}
+              onInput={onLogoSizeInput}
+              style={{ width: "100%", marginTop: "4px" }}
+            />
+          </label>
+          
+          <label>
+            Logo Position:
+            <select
+              value={customizer.logoPosition}
+              onChange={(e) => updateLogoPosition(e.target.value as 'left'|'center'|'right')}
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </label>
+        </div>
+
+        {/* Color Pickers (onInput for instant feedback) */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8, marginBottom: 12 }}>
+          <label>
+            Primary Color:
+            <input
+              type="color"
+              value={customizer.colors.primary}
+              onInput={(e) => updateColors({ primary: (e.currentTarget as HTMLInputElement).value })}
+            />
+          </label>
+          <label>
+            Text Color:
+            <input
+              type="color"
+              value={customizer.colors.text}
+              onInput={(e) => updateColors({ text: (e.currentTarget as HTMLInputElement).value })}
+            />
+          </label>
+          <label>
+            Background:
+            <input
+              type="color"
+              value={customizer.colors.background}
+              onInput={(e) => updateColors({ background: (e.currentTarget as HTMLInputElement).value })}
+            />
+          </label>
+        </div>
+
+        {/* Font Sizes (number: change local + blur commit) */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8, marginBottom: 12 }}>
+          <label>
+            Title Size (px):
+            <input
+              type="number"
+              min="16"
+              max="48"
+              value={titleSize}
+              onChange={(e) => setTitleSize(Number(e.target.value))}
+              onBlur={() => updateFontSize({ title: Number(titleSize) })}
+            />
+          </label>
+          <label>
+            Body Size (px):
+            <input
+              type="number"
+              min="10"
+              max="24"
+              value={bodySize}
+              onChange={(e) => setBodySize(Number(e.target.value))}
+              onBlur={() => updateFontSize({ body: Number(bodySize) })}
+            />
+          </label>
+          <label>
+            Small Size (px):
+            <input
+              type="number"
+              min="8"
+              max="16"
+              value={smallSize}
+              onChange={(e) => setSmallSize(Number(e.target.value))}
+              onBlur={() => updateFontSize({ small: Number(smallSize) })}
+            />
+          </label>
+        </div>
+
+        {/* Margins (number: blur commit) */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8 }}>
+          <label>
+            Top Margin (px):
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={topMargin}
+              onChange={(e) => setTopMargin(Number(e.target.value))}
+              onBlur={() => updateMargins({ top: Number(topMargin) })}
+            />
+          </label>
+          <label>
+            Right Margin (px):
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={rightMargin}
+              onChange={(e) => setRightMargin(Number(e.target.value))}
+              onBlur={() => updateMargins({ right: Number(rightMargin) })}
+            />
+          </label>
+          <label>
+            Bottom Margin (px):
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={bottomMargin}
+              onChange={(e) => setBottomMargin(Number(e.target.value))}
+              onBlur={() => updateMargins({ bottom: Number(bottomMargin) })}
+            />
+          </label>
+          <label>
+            Left Margin (px):
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={leftMargin}
+              onChange={(e) => setLeftMargin(Number(e.target.value))}
+              onBlur={() => updateMargins({ left: Number(leftMargin) })}
+            />
+          </label>
+        </div>
+      </fieldset>
+
+      {/* LEGACY THEME SETTINGS (for compatibility) */}
       <fieldset style={{ marginBottom: 12, padding: 8 }}>
-        <legend>🎨 Theme Colors & Fonts</legend>
+        <legend>🎨 Legacy Theme Colors & Fonts</legend>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 8 }}>
           <label>
             Brand Primary:
             <input 
               type="color" 
-              value={colorSettings.brandPrimary} 
-              onInput={e => s.updateBrandPrimary(e.currentTarget.value)}
+              value={profile?.theme?.brandPrimary || '#3b82f6'} 
+              onInput={e => updateBrandPrimary(e.currentTarget.value)}
             />
           </label>
           <label>
             Brand Secondary:
             <input 
               type="color" 
-              value={colorSettings.brandSecondary} 
-              onInput={e => s.updateBrandSecondary(e.currentTarget.value)}
-            />
-          </label>
-          <label>
-            Text Color:
-            <input 
-              type="color" 
-              value={colorSettings.text} 
-              onInput={e => s.setTheme({ text: e.currentTarget.value })}
+              value={profile?.theme?.brandSecondary || '#64748b'} 
+              onInput={e => updateBrandSecondary(e.currentTarget.value)}
             />
           </label>
           <label>
             Background:
             <input 
               type="color" 
-              value={colorSettings.background} 
-              onInput={e => s.updateBackground(e.currentTarget.value)}
+              value={profile?.theme?.background || '#ffffff'} 
+              onInput={e => updateBackground(e.currentTarget.value)}
             />
           </label>
         </div>
@@ -86,8 +268,8 @@ export default function ThemeSettingsPanel() {
           <label>
             Font Family:
             <select 
-              value={themeSettings.fontFamily} 
-              onInput={e => s.setTheme({ fontFamily: e.currentTarget.value })}
+              value={profile?.theme?.fontFamily || 'system-ui'} 
+              onInput={e => setTheme({ fontFamily: e.currentTarget.value })}
             >
               <option value="Roboto">Roboto</option>
               <option value="Arial">Arial</option>
@@ -97,21 +279,21 @@ export default function ThemeSettingsPanel() {
             </select>
           </label>
           <label>
-            Font Size: {themeSettings.baseFontPx}px
+            Font Size: {profile?.theme?.baseFontPx || 14}px
             <input 
               type="range" 
               min="10" 
               max="20" 
-              value={themeSettings.baseFontPx} 
-              onInput={e => s.updateBaseFontSize(Number(e.currentTarget.value))}
+              value={profile?.theme?.baseFontPx || 14} 
+              onInput={e => updateBaseFontSize(Number(e.currentTarget.value))}
               style={{ width: "100%", marginTop: "4px" }}
             />
           </label>
           <label>
             Font Weight:
             <select 
-              value={themeSettings.fontWeight} 
-              onInput={e => s.setTheme({ fontWeight: e.currentTarget.value as any })}
+              value={profile?.theme?.fontWeight || 'Normal'} 
+              onInput={e => setTheme({ fontWeight: e.currentTarget.value as any })}
             >
               <option value="Normal">Normal</option>
               <option value="SemiBold">SemiBold</option>
@@ -121,8 +303,8 @@ export default function ThemeSettingsPanel() {
           <label>
             Density:
             <select 
-              value={themeSettings.density} 
-              onInput={e => s.setTheme({ density: e.currentTarget.value as any })}
+              value={profile?.theme?.density || 'normal'} 
+              onInput={e => setTheme({ density: e.currentTarget.value as any })}
             >
               <option value="compact">Compact</option>
               <option value="normal">Normal</option>
@@ -132,8 +314,8 @@ export default function ThemeSettingsPanel() {
           <label>
             Totals Align:
             <select 
-              value={themeSettings.totalsAlign} 
-              onInput={e => s.setTheme({ totalsAlign: e.currentTarget.value as any })}
+              value={profile?.theme?.totalsAlign || 'right'} 
+              onInput={e => setTheme({ totalsAlign: e.currentTarget.value as any })}
             >
               <option value="left">Left</option>
               <option value="center">Center</option>
@@ -147,7 +329,7 @@ export default function ThemeSettingsPanel() {
             <input 
               type="checkbox" 
               checked={profile?.theme?.altRowStripesOn || false}
-              onInput={e => s.setTheme({ altRowStripesOn: e.currentTarget.checked })}
+              onInput={e => setTheme({ altRowStripesOn: e.currentTarget.checked })}
             />
             Alternating row stripes
           </label>
@@ -164,7 +346,7 @@ export default function ThemeSettingsPanel() {
               <input 
                 type="file" 
                 accept="image/*" 
-                onInput={handleLogoUpload}
+                onChange={handleLogoUpload}
               />
             </label>
             <span>or</span>
@@ -172,8 +354,8 @@ export default function ThemeSettingsPanel() {
               Logo URL:
               <input 
                 type="url" 
-                value={logoSettings.logo.logoUrl || ""} 
-                onInput={e => s.updateLogoUrl(e.currentTarget.value)}
+                value={profile?.logo?.logoUrl || ""} 
+                onInput={e => setLogo({ logoUrl: e.currentTarget.value, logoDataUrl: undefined })}
                 placeholder="https://example.com/logo.png"
               />
             </label>
@@ -183,8 +365,8 @@ export default function ThemeSettingsPanel() {
             <label>
               Logo Size:
               <select 
-                value={logoSettings.logoSize} 
-                onInput={e => s.updateLogoSize(e.currentTarget.value as any)}
+                value={profile?.theme?.logoSize || 'md'} 
+                onInput={e => setTheme({ logoSize: e.currentTarget.value as any })}
               >
                 <option value="sm">Small</option>
                 <option value="md">Medium</option>
@@ -194,8 +376,8 @@ export default function ThemeSettingsPanel() {
             <label>
               Logo Align:
               <select 
-                value={logoSettings.logoAlign} 
-                onInput={e => s.updateLogoAlign(e.currentTarget.value as any)}
+                value={profile?.theme?.logoAlign || 'left'} 
+                onInput={e => setTheme({ logoAlign: e.currentTarget.value as any })}
               >
                 <option value="left">Left</option>
                 <option value="center">Center</option>
@@ -204,10 +386,10 @@ export default function ThemeSettingsPanel() {
             </label>
           </div>
           
-          {(logoSettings.logo.logoDataUrl || logoSettings.logo.logoUrl) && (
+          {(profile?.logo?.logoDataUrl || profile?.logo?.logoUrl) && (
             <div style={{ marginTop: 8 }}>
               <img 
-                src={logoSettings.logo.logoDataUrl || logoSettings.logo.logoUrl} 
+                src={profile.logo.logoDataUrl || profile.logo.logoUrl} 
                 alt="Logo preview" 
                 style={{ maxWidth: "200px", maxHeight: "100px", border: "1px solid #ddd" }}
               />
@@ -224,7 +406,7 @@ export default function ThemeSettingsPanel() {
             Footer Layout:
             <select 
               value={footer.layout || "simple"} 
-              onInput={e => s.setFooter({ layout: e.currentTarget.value as any })}
+              onInput={e => setFooter({ layout: e.currentTarget.value as any })}
             >
               <option value="simple">Simple</option>
               <option value="corporate">Corporate</option>
@@ -235,7 +417,7 @@ export default function ThemeSettingsPanel() {
             Notes:
             <textarea 
               value={footer.notes || ""} 
-              onInput={e => s.setFooter({ notes: e.currentTarget.value })}
+              onInput={e => setFooter({ notes: e.currentTarget.value })}
               placeholder="Additional notes or terms..."
               rows={3}
             />
@@ -245,7 +427,7 @@ export default function ThemeSettingsPanel() {
             Contact Info:
             <input 
               value={footer.contact || ""} 
-              onInput={e => s.setFooter({ contact: e.currentTarget.value })}
+              onInput={e => setFooter({ contact: e.currentTarget.value })}
               placeholder="www.company.com | +1-555-123-4567"
             />
           </label>
@@ -254,7 +436,7 @@ export default function ThemeSettingsPanel() {
             Social Media:
             <input 
               value={footer.socialsCsv || ""} 
-              onInput={e => s.setFooter({ socialsCsv: e.currentTarget.value })}
+              onInput={e => setFooter({ socialsCsv: e.currentTarget.value })}
               placeholder="Instagram @handle, YouTube @channel"
             />
           </label>
@@ -264,7 +446,7 @@ export default function ThemeSettingsPanel() {
               Legal Text:
               <textarea 
                 value={footer.legal || ""} 
-                onInput={e => s.setFooter({ legal: e.currentTarget.value })}
+                onInput={e => setFooter({ legal: e.currentTarget.value })}
                 placeholder="Legal disclaimers, terms, etc..."
                 rows={2}
               />
@@ -276,7 +458,7 @@ export default function ThemeSettingsPanel() {
               <input 
                 type="checkbox" 
                 checked={footer.colorBarOn || false}
-                onInput={e => s.setFooter({ colorBarOn: e.currentTarget.checked })}
+                onInput={e => setFooter({ colorBarOn: e.currentTarget.checked })}
               />
               Color Bar
             </label>
@@ -288,7 +470,7 @@ export default function ThemeSettingsPanel() {
                   min="1" 
                   max="20" 
                   value={footer.colorBarHeightPx || 4} 
-                  onInput={e => s.setFooter({ colorBarHeightPx: parseInt(e.currentTarget.value) })}
+                  onInput={e => setFooter({ colorBarHeightPx: parseInt(e.currentTarget.value) })}
                   style={{ width: "60px" }}
                 />
               </label>

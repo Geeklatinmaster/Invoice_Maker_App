@@ -1,24 +1,20 @@
-import { useMemo } from "react";
-import { useInvoice, useColorSettings, useLogoSettings, useThemeSettings, useRenderVersion } from "@/features/invoice/store/useInvoice";
-import { usePrintSync } from "../hooks/usePrintSync";
+import { useMemo } from 'react';
+import { useInvoice, useCustomizerSettings } from "@/features/invoice/store/useInvoice";
+import { usePrintSync } from "@/features/invoice/hooks/usePrintSync";
 import { fmtCurrency } from "../lib/format";
 import type { Profile } from "@/features/invoice/types/types";
 
 const LOGO_PX: Record<"sm" | "md" | "lg", number> = { sm: 36, md: 64, lg: 92 };
 
 export default function Preview() {
-  const store = useInvoice();
-  const renderVersion = useRenderVersion();
-  const colorSettings = useColorSettings();
-  const logoSettings = useLogoSettings();
-  const themeSettings = useThemeSettings();
-  
-  // Sync styles for print
-  usePrintSync();
-  const invoice = store.invoice;
-  const totals = store.totals;
-  const profiles = store.profiles;
-  const selectedProfileId = store.selectedProfileId;
+  const s = useInvoice();
+  const customizer = useCustomizerSettings();
+  usePrintSync(); // sincroniza estilos @media print
+
+  const iv = s.invoice;
+  const totals = s.totals;
+  const profiles = s.profiles;
+  const selectedProfileId = s.selectedProfileId;
 
   const currentProfile = useMemo(
     () => profiles.find((p: Profile) => p.id === selectedProfileId) ?? profiles[0],
@@ -27,41 +23,84 @@ export default function Preview() {
 
   const footer = currentProfile?.footer || {};
 
-  // CSS variables for instant style binding
-  const cssVars = useMemo(() => ({
-    "--brand-primary": colorSettings.brandPrimary,
-    "--brand-secondary": colorSettings.brandSecondary,
-    "--text": colorSettings.text,
-    "--muted": colorSettings.muted,
-    "--bg": colorSettings.background,
-    "--accent": colorSettings.accent,
-    "--base-size": `${themeSettings.baseFontPx}px`,
-    fontFamily: themeSettings.fontFamily,
-    fontSize: `${themeSettings.baseFontPx}px`,
-    fontWeight: themeSettings.fontWeight === "Bold" ? "bold" : themeSettings.fontWeight === "SemiBold" ? "600" : "normal",
-    lineHeight: themeSettings.density === "compact" ? "1.2" : themeSettings.density === "relaxed" ? "1.6" : "1.4",
-    color: colorSettings.text,
-    backgroundColor: colorSettings.background,
-  } as React.CSSProperties), [colorSettings, themeSettings]);
+  const dynamicStyles = useMemo(() => {
+    const justify =
+      customizer.logoPosition === 'left'
+        ? 'flex-start'
+        : customizer.logoPosition === 'center'
+        ? 'center'
+        : 'flex-end';
 
-  // Logo configuration
-  const logoUrl = logoSettings.logo.logoDataUrl || logoSettings.logo.logoUrl || "";
-  const logoSizePx = LOGO_PX[logoSettings.logoSize];
+    return {
+      container: {
+        padding: `${customizer.margins.top}px ${customizer.margins.right}px ${customizer.margins.bottom}px ${customizer.margins.left}px`,
+        backgroundColor: customizer.colors.background,
+        color: customizer.colors.text,
+        border: "1px solid #ddd",
+        minHeight: "400px",
+      },
+      logoWrapper: {
+        display: 'flex',
+        justifyContent: justify,
+        marginBottom: 12,
+      },
+      logo: {
+        maxWidth: '100%',
+        width: `${customizer.logoSize}%`,
+        height: 'auto',
+        objectFit: 'contain' as const,
+      },
+      title: {
+        fontSize: `${customizer.fontSize.title}px`,
+        color: customizer.colors.primary,
+        margin: "0 0 8px 0",
+      },
+      documentInfo: {
+        fontSize: `${customizer.fontSize.body}px`,
+        margin: "4px 0",
+        fontWeight: "600",
+      },
+      customerInfo: {
+        fontSize: `${customizer.fontSize.body}px`,
+        margin: "4px 0 16px 0",
+      },
+    } as const;
+  }, [customizer]);
+
+  // Legacy theme selectors for backward compatibility
+  const colorSettings = {
+    brandPrimary: currentProfile?.theme?.brandPrimary || customizer.colors.primary,
+    brandSecondary: currentProfile?.theme?.brandSecondary || '#64748b',
+    text: currentProfile?.theme?.text || customizer.colors.text,
+    muted: currentProfile?.theme?.muted || '#6b7280',
+    background: currentProfile?.theme?.background || customizer.colors.background,
+    accent: currentProfile?.theme?.accent || '#f59e0b',
+  };
+
+  const themeSettings = {
+    fontFamily: currentProfile?.theme?.fontFamily || 'system-ui',
+    fontWeight: currentProfile?.theme?.fontWeight || 'Normal' as const,
+    baseFontPx: currentProfile?.theme?.baseFontPx || customizer.fontSize.body,
+    density: currentProfile?.theme?.density || 'normal' as const,
+    separators: currentProfile?.theme?.separators || 'lines' as const,
+    totalsAlign: currentProfile?.theme?.totalsAlign || 'right' as const,
+  };
+
+  // Legacy logo configuration
+  const logoUrl = currentProfile?.logo?.logoDataUrl || currentProfile?.logo?.logoUrl || "";
+  const logoSizePx = LOGO_PX[currentProfile?.theme?.logoSize || 'md'];
   const logoStyle: React.CSSProperties = useMemo(() => ({ 
     height: logoSizePx, 
     width: "auto", 
     objectFit: "contain" 
   }), [logoSizePx]);
 
-  const logoAlignmentStyle = useMemo(() => 
-    logoSettings.logoAlign === "right" ? { justifyContent: "flex-end" } :
-    logoSettings.logoAlign === "center" ? { justifyContent: "center" } :
-    { justifyContent: "flex-start" }, [logoSettings.logoAlign]);
-
-  const headerStyles = useMemo(() => ({
-    color: colorSettings.brandPrimary,
-    margin: "0 0 8px 0",
-  }), [colorSettings.brandPrimary]);
+  const logoAlignmentStyle = useMemo(() => {
+    const align = currentProfile?.theme?.logoAlign || 'left';
+    return align === "right" ? { justifyContent: "flex-end" } :
+           align === "center" ? { justifyContent: "center" } :
+           { justifyContent: "flex-start" };
+  }, [currentProfile?.theme?.logoAlign]);
 
   const tableStyles = {
     width: "100%",
@@ -85,34 +124,34 @@ export default function Preview() {
 
   const totalsContainerStyles = useMemo(() => ({
     marginTop: "16px",
-    textAlign: themeSettings.totalsAlign as any,
+    textAlign: themeSettings.totalsAlign,
     fontSize: `${themeSettings.baseFontPx + 1}px`,
   }), [themeSettings.totalsAlign, themeSettings.baseFontPx]);
 
   return (
-    <section 
-      className="invoice-preview"
-      style={{
-        ...cssVars,
-        border: "1px solid #ddd", 
-        padding: "16px",
-        minHeight: "400px",
-      }}
-      data-rv={renderVersion}
-    >
-      {/* Logo */}
-      <div className="invoice-logo" style={{ display: "flex", ...logoAlignmentStyle, marginBottom: "12px" }}>
-        {logoUrl ? <img src={logoUrl} alt="logo" style={logoStyle} /> : null}
+    <section className="invoice-preview" style={dynamicStyles.container}>
+      {/* NEW CUSTOMIZER LOGO (priority over legacy) */}
+      <div className="invoice-logo" style={dynamicStyles.logoWrapper}>
+        {logoUrl ? <img src={logoUrl} alt="logo" style={dynamicStyles.logo} /> : null}
       </div>
 
+      {/* LEGACY LOGO (fallback if no URL in new system) */}
+      {!logoUrl && (
+        <div className="invoice-logo-legacy" style={{ display: "flex", ...logoAlignmentStyle, marginBottom: "12px" }}>
+          {currentProfile?.logo?.logoUrl && <img src={currentProfile.logo.logoUrl} alt="logo" style={logoStyle} />}
+        </div>
+      )}
+
       {/* Header */}
-      <h3 style={headerStyles}>{currentProfile?.businessName || "Business Name"}</h3>
-      <p style={{ margin: "4px 0", fontWeight: "600" }}>
-        {invoice.docType} • {invoice.code}
-      </p>
-      <p style={{ margin: "4px 0 16px 0" }}>
-        Customer: {invoice.customerName || "(no customer name)"}
-      </p>
+      <header style={{ display: 'grid', gap: 8, marginBottom: 8 }}>
+        <h1 style={dynamicStyles.title}>{currentProfile?.businessName || "Business Name"}</h1>
+        <p style={dynamicStyles.documentInfo}>
+          {iv.docType} • {iv.code}
+        </p>
+        <p style={dynamicStyles.customerInfo}>
+          Customer: {iv.customerName || "(no customer name)"}
+        </p>
+      </header>
       
       {/* Items Table */}
       <table className="invoice-table" style={tableStyles}>
@@ -125,7 +164,7 @@ export default function Preview() {
           </tr>
         </thead>
         <tbody>
-          {invoice.items.map((item: any, idx: number) => (
+          {iv.items.map((item: any, idx: number) => (
             <tr 
               key={item.id}
               style={{
@@ -135,7 +174,7 @@ export default function Preview() {
               <td style={{...tdStyles, textAlign: "left"}}>
                 <div style={{ fontWeight: "500" }}>{item.title}</div>
                 {item.description && (
-                  <div style={{ fontSize: "0.9em", color: colorSettings.muted, marginTop: "2px" }}>
+                  <div style={{ fontSize: `${customizer.fontSize.small}px`, color: colorSettings.muted, marginTop: "2px" }}>
                     {item.description}
                   </div>
                 )}
@@ -205,7 +244,7 @@ export default function Preview() {
           )}
           
           <div className="invoice-footer" style={{ 
-            fontSize: `${themeSettings.baseFontPx - 2}px`, 
+            fontSize: `${customizer.fontSize.small}px`, 
             color: colorSettings.muted,
             lineHeight: footer.layout === "corporate" ? "1.5" : "1.3"
           }}>

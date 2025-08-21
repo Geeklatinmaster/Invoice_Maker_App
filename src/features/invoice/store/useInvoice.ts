@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
 import { save, load } from "../lib/storage";
 import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset, FooterSettings, ThemeSettings, LogoSettings, LogoSize, LogoAlign } from "../types/types";
@@ -18,6 +19,22 @@ type Totals = {
   total: number;
 };
 
+type CustomizerSettings = {
+  logoSize: number;
+  logoPosition: 'left' | 'center' | 'right';
+  margins: { top: number; right: number; bottom: number; left: number };
+  colors: { primary: string; text: string; background: string };
+  fontSize: { title: number; body: number; small: number };
+};
+
+const defaultCustomizer: CustomizerSettings = {
+  logoSize: 100,
+  logoPosition: 'left',
+  margins: { top: 20, right: 20, bottom: 20, left: 20 },
+  colors: { primary: '#1e40af', text: '#1f2937', background: '#ffffff' },
+  fontSize: { title: 24, body: 14, small: 12 },
+};
+
 type InvoiceStore = {
   // State
   profiles: Profile[];
@@ -25,6 +42,7 @@ type InvoiceStore = {
   invoice: Invoice;
   totals: Totals;
   renderVersion: number;
+  customizer: CustomizerSettings;
   
   // Profile actions
   selectProfile: (id: string) => void;
@@ -62,6 +80,13 @@ type InvoiceStore = {
   updateBackground: (color: string) => void;
   updateBaseFontSize: (size: number) => void;
   
+  // Customizer granular setters
+  updateCustomizerLogoSize: (size: number) => void;
+  updateLogoPosition: (pos: CustomizerSettings['logoPosition']) => void;
+  updateMargins: (margins: Partial<CustomizerSettings['margins']>) => void;
+  updateColors: (colors: Partial<CustomizerSettings['colors']>) => void;
+  updateFontSize: (sizes: Partial<CustomizerSettings['fontSize']>) => void;
+  
   // Computation
   compute: () => void;
 };
@@ -98,29 +123,26 @@ const createDefaultTotals = (): Totals => ({
   total: 0,
 });
 
+const defaultProfile = createDefaultProfile();
+
 const initialState = {
-  profiles: [createDefaultProfile()],
-  selectedProfileId: "",
+  profiles: [defaultProfile],
+  selectedProfileId: defaultProfile.id,
   invoice: createDefaultInvoice(),
   totals: createDefaultTotals(),
   renderVersion: 0,
+  customizer: defaultCustomizer,
 };
 
-// Load persisted state
-const persistedState = load(initialState);
-// Ensure selectedProfileId is set
-if (!persistedState.selectedProfileId && persistedState.profiles.length > 0) {
-  persistedState.selectedProfileId = persistedState.profiles[0].id;
-}
-
 export const useInvoice = create<InvoiceStore>()(
-  subscribeWithSelector((set, get) => ({
-  ...persistedState,
+  subscribeWithSelector(
+    persist(
+      (set, get) => ({
+        ...initialState,
   
   // Profile actions
   selectProfile: (id: string) => {
     set({ selectedProfileId: id });
-    save(get());
   },
   
   addProfile: (profile: Partial<Profile>) => {
@@ -138,7 +160,6 @@ export const useInvoice = create<InvoiceStore>()(
       profiles: [...state.profiles, newProfile],
       selectedProfileId: newProfile.id,
     }));
-    save(get());
   },
   
   updateProfile: (id: string, updates: Partial<Profile>) => {
@@ -147,7 +168,6 @@ export const useInvoice = create<InvoiceStore>()(
         p.id === id ? { ...p, ...updates } : p
       ),
     }));
-    save(get());
   },
   
   deleteProfile: (id: string) => {
@@ -170,7 +190,6 @@ export const useInvoice = create<InvoiceStore>()(
         selectedProfileId: newSelectedId,
       });
     }
-    save(get());
   },
   
   exportProfiles: () => {
@@ -185,8 +204,7 @@ export const useInvoice = create<InvoiceStore>()(
           profiles,
           selectedProfileId: profiles[0].id,
         });
-        save(get());
-      }
+          }
     } catch (error) {
       console.error("Failed to import profiles:", error);
     }
@@ -203,7 +221,6 @@ export const useInvoice = create<InvoiceStore>()(
     }));
     // Auto-recompute totals after docType change
     get().compute();
-    save(get());
   },
   
   regenerateCode: () => {
@@ -217,21 +234,18 @@ export const useInvoice = create<InvoiceStore>()(
     });
     // Auto-recompute totals after regeneration
     get().compute();
-    save(get());
   },
   
   patchInvoice: (updates: Partial<Invoice>) => {
     set(state => ({
       invoice: { ...state.invoice, ...updates },
     }));
-    save(get());
   },
   
   setFooterId: (footerId: FooterId) => {
     set(state => ({
       invoice: { ...state.invoice, footerId },
     }));
-    save(get());
   },
   
   setGlobalDiscount: (discount: number) => {
@@ -240,7 +254,6 @@ export const useInvoice = create<InvoiceStore>()(
     }));
     // Auto-recompute totals after discount change
     get().compute();
-    save(get());
   },
   
   setGlobalTax: (tax: number) => {
@@ -249,7 +262,6 @@ export const useInvoice = create<InvoiceStore>()(
     }));
     // Auto-recompute totals after tax change
     get().compute();
-    save(get());
   },
   
   setRetentionPreset: (preset: RetentionPreset) => {
@@ -258,7 +270,6 @@ export const useInvoice = create<InvoiceStore>()(
     }));
     // Auto-recompute totals after retention change
     get().compute();
-    save(get());
   },
   
   // Item actions
@@ -281,7 +292,6 @@ export const useInvoice = create<InvoiceStore>()(
     }));
     // Auto-recompute totals after adding item
     get().compute();
-    save(get());
   },
   
   updateItem: (id: string, updates: Partial<InvoiceItem>) => {
@@ -295,7 +305,6 @@ export const useInvoice = create<InvoiceStore>()(
     }));
     // Auto-recompute totals after updating item
     get().compute();
-    save(get());
   },
   
   removeItem: (id: string) => {
@@ -307,7 +316,6 @@ export const useInvoice = create<InvoiceStore>()(
     }));
     // Auto-recompute totals after removing item
     get().compute();
-    save(get());
   },
   
   // Theme/Footer/Logo actions
@@ -318,7 +326,6 @@ export const useInvoice = create<InvoiceStore>()(
         state.profiles[profileIdx].footer = { ...(state.profiles[profileIdx].footer || {}), ...footerSettings };
       }
       state.renderVersion++;
-      save(state);
       return state;
     });
   },
@@ -330,7 +337,6 @@ export const useInvoice = create<InvoiceStore>()(
         state.profiles[profileIdx].theme = { ...(state.profiles[profileIdx].theme || {}), ...themeSettings };
       }
       state.renderVersion++;
-      save(state);
       return state;
     });
   },
@@ -342,7 +348,6 @@ export const useInvoice = create<InvoiceStore>()(
         state.profiles[profileIdx].logo = { ...(state.profiles[profileIdx].logo || {}), ...logoSettings };
       }
       state.renderVersion++;
-      save(state);
       return state;
     });
   },
@@ -393,7 +398,6 @@ export const useInvoice = create<InvoiceStore>()(
     };
     
     set({ totals });
-    save(get());
   },
   
   // Granular live update actions
@@ -407,7 +411,6 @@ export const useInvoice = create<InvoiceStore>()(
       state.renderVersion++;
       return state;
     });
-    save(get());
   },
   
   updateLogoAlign: (align: LogoAlign) => {
@@ -420,7 +423,6 @@ export const useInvoice = create<InvoiceStore>()(
       state.renderVersion++;
       return state;
     });
-    save(get());
   },
   
   updateLogoUrl: (url: string) => {
@@ -433,7 +435,6 @@ export const useInvoice = create<InvoiceStore>()(
       state.renderVersion++;
       return state;
     });
-    save(get());
   },
   
   updateBrandPrimary: (color: string) => {
@@ -446,7 +447,6 @@ export const useInvoice = create<InvoiceStore>()(
       state.renderVersion++;
       return state;
     });
-    save(get());
   },
   
   updateBrandSecondary: (color: string) => {
@@ -459,7 +459,6 @@ export const useInvoice = create<InvoiceStore>()(
       state.renderVersion++;
       return state;
     });
-    save(get());
   },
   
   updateBackground: (color: string) => {
@@ -472,7 +471,6 @@ export const useInvoice = create<InvoiceStore>()(
       state.renderVersion++;
       return state;
     });
-    save(get());
   },
   
   updateBaseFontSize: (size: number) => {
@@ -485,9 +483,58 @@ export const useInvoice = create<InvoiceStore>()(
       state.renderVersion++;
       return state;
     });
-    save(get());
   },
-})));
+  
+  // --- Setters granulares para customizer ---
+  updateCustomizerLogoSize: (size) =>
+    set((s) => ({ customizer: { ...s.customizer, logoSize: size } })),
+
+  updateLogoPosition: (pos) =>
+    set((s) => ({ customizer: { ...s.customizer, logoPosition: pos } })),
+
+  updateMargins: (margins) =>
+    set((s) => ({
+      customizer: {
+        ...s.customizer,
+        margins: { ...s.customizer.margins, ...margins },
+      },
+    })),
+
+  updateColors: (colors) =>
+    set((s) => ({
+      customizer: {
+        ...s.customizer,
+        colors: { ...s.customizer.colors, ...colors },
+      },
+    })),
+
+  updateFontSize: (sizes) =>
+    set((s) => ({
+      customizer: {
+        ...s.customizer,
+        fontSize: { ...s.customizer.fontSize, ...sizes },
+      },
+    })),
+      }),
+      {
+        name: 'invoice-store',
+        version: 2,
+        migrate: (state: any, version) => {
+          // Garantiza que customizer exista y tenga shape completo
+          const prev = state?.customizer ?? {};
+          state.customizer = {
+            ...defaultCustomizer,
+            ...prev,
+            margins: { ...defaultCustomizer.margins, ...(prev.margins ?? {}) },
+            colors: { ...defaultCustomizer.colors, ...(prev.colors ?? {}) },
+            fontSize: { ...defaultCustomizer.fontSize, ...(prev.fontSize ?? {}) },
+          };
+          return state;
+        },
+      }
+    )
+  )
+);
 
 // Memoized selectors for granular subscriptions  
 export const useLogoSettings = () => useInvoice((state) => {
@@ -526,3 +573,12 @@ export const useThemeSettings = () => useInvoice((state) => {
 });
 
 export const useRenderVersion = () => useInvoice(state => state.renderVersion);
+
+// Selectores memoizados para customizer
+export const useCustomizerSettings = (): CustomizerSettings =>
+  useInvoice((s) => s.customizer);
+
+export const useCustomizerLogoSettings = () =>
+  useInvoice(
+    (s) => ({ size: s.customizer.logoSize, position: s.customizer.logoPosition })
+  );
