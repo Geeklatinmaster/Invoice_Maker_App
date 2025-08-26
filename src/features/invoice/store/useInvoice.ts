@@ -24,6 +24,7 @@ export type CustomizerSettings = {
   margins: { top: number; right: number; bottom: number; left: number };
   colors: { primary: string; text: string; background: string };
   fontSize: { title: number; body: number; small: number };
+  fontFamily: string;
 };
 
 export const defaultCustomizer: CustomizerSettings = {
@@ -32,6 +33,7 @@ export const defaultCustomizer: CustomizerSettings = {
   margins: { top: 20, right: 20, bottom: 20, left: 20 },
   colors: { primary: '#1e40af', text: '#1f2937', background: '#ffffff' },
   fontSize: { title: 24, body: 14, small: 12 },
+  fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
 };
 
 const mergeCustomizer = (c?: Partial<CustomizerSettings>): CustomizerSettings => ({
@@ -93,6 +95,11 @@ type InvoiceStore = {
   updateMargins: (margins: Partial<CustomizerSettings['margins']>) => void;
   updateColors: (colors: Partial<CustomizerSettings['colors']>) => void;
   updateFontSize: (sizes: Partial<CustomizerSettings['fontSize']>) => void;
+  updateFontFamily: (fontFamily: string) => void;
+  applyLegacyThemeToCustomizer: (legacy: {
+    primary?: string; text?: string; background?: string;
+    fontFamily?: string; bodySize?: number; titleSize?: number;
+  }) => void;
   
   // Computation
   compute: () => void;
@@ -520,6 +527,34 @@ export const useInvoice = create<InvoiceStore>()(
       customizer: {
         ...s.customizer,
         fontSize: { ...s.customizer.fontSize, ...sizes },
+      },
+    })),
+
+  updateFontFamily: (fontFamily) =>
+    set((s) => ({
+      customizer: {
+        ...s.customizer,
+        fontFamily,
+      },
+    })),
+
+  // Bridge Legacy → Customizer (para que "Legacy theme colors & fonts" impacte Preview al instante)
+  applyLegacyThemeToCustomizer: (legacy) =>
+    set((s) => ({
+      customizer: {
+        ...s.customizer,
+        colors: {
+          ...s.customizer.colors,
+          ...(legacy.primary ? { primary: legacy.primary } : {}),
+          ...(legacy.text ? { text: legacy.text } : {}),
+          ...(legacy.background ? { background: legacy.background } : {}),
+        },
+        fontFamily: legacy.fontFamily ?? s.customizer.fontFamily,
+        fontSize: {
+          ...s.customizer.fontSize,
+          ...(legacy.bodySize  ? { body:  legacy.bodySize }  : {}),
+          ...(legacy.titleSize ? { title: legacy.titleSize } : {}),
+        },
       },
     })),
       }),

@@ -13,43 +13,36 @@ async function fileToDataURL(file: File): Promise<string> {
 }
 
 export default function ThemeSettingsPanel() {
-  const {
-    customizer,
-    updateCustomizerLogoSize,
-    updateLogoPosition,
-    updateMargins,
-    updateColors,
-    updateFontSize,
-    // Original theme actions for legacy support
-    setLogo,
-    setFooter,
-    setTheme,
-    updateBrandPrimary,
-    updateBrandSecondary,
-    updateBackground,
-    updateBaseFontSize,
-  } = useInvoice((s) => ({
-    customizer: s.customizer,
-    updateCustomizerLogoSize: s.updateCustomizerLogoSize,
-    updateLogoPosition: s.updateLogoPosition,
-    updateMargins: s.updateMargins,
-    updateColors: s.updateColors,
-    updateFontSize: s.updateFontSize,
-    setLogo: s.setLogo,
-    setFooter: s.setFooter,
-    setTheme: s.setTheme,
-    updateBrandPrimary: s.updateBrandPrimary,
-    updateBrandSecondary: s.updateBrandSecondary,
-    updateBackground: s.updateBackground,
-    updateBaseFontSize: s.updateBaseFontSize,
-  }));
+  // Use simple selectors to avoid object recreation loops
+  const selectedProfileId = useInvoice(s => s.selectedProfileId);
+  const profiles          = useInvoice(s => s.profiles);
+  const setTheme          = useInvoice(s => s.setTheme);
+  const invoice           = useInvoice(s => s.invoice);
+  const setFooter         = useInvoice(s => s.setFooter);
+  const customizer        = useInvoice(s => s.customizer);
+  
+  // Legacy actions
+  const setLogo           = useInvoice(s => s.setLogo);
+  const updateBrandPrimary = useInvoice(s => s.updateBrandPrimary);
+  const updateBrandSecondary = useInvoice(s => s.updateBrandSecondary);
+  const updateBackground  = useInvoice(s => s.updateBackground);
+  const updateBaseFontSize = useInvoice(s => s.updateBaseFontSize);
+  
+  // Bridge for live updates
+  const applyLegacyThemeToCustomizer = useInvoice(s => s.applyLegacyThemeToCustomizer);
+  const updateFontFamily = useInvoice(s => s.updateFontFamily);
+  
+  // Customizer actions
+  const updateCustomizerLogoSize = useInvoice(s => s.updateCustomizerLogoSize);
+  const updateLogoPosition = useInvoice(s => s.updateLogoPosition);
+  const updateMargins     = useInvoice(s => s.updateMargins);
+  const updateColors      = useInvoice(s => s.updateColors);
+  const updateFontSize    = useInvoice(s => s.updateFontSize);
 
-  const s = useInvoice();
-  const profile = s.profiles.find(p => p.id === s.selectedProfileId) ?? s.profiles[0];
+  const profile = profiles.find(p => p.id === selectedProfileId) ?? profiles[0];
+  const footer  = profile?.footer ?? {};
   
   if (!profile) return null;
-  
-  const footer = profile.footer || {};
 
   // Estado local para inputs de texto/number
   const [titleSize, setTitleSize] = useState(customizer.fontSize.title);
@@ -93,30 +86,62 @@ export default function ThemeSettingsPanel() {
         <legend style={{ color: "#16a34a", fontWeight: "bold" }}>✨ Live Customizer (Instant Updates)</legend>
         
         {/* Logo Settings */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 8, marginBottom: 12 }}>
-          <label>
-            Logo Size: {customizer.logoSize}%
-            <input
-              type="range"
-              min={10}
-              max={200}
-              value={customizer.logoSize}
-              onInput={onLogoSizeInput}
-              style={{ width: "100%", marginTop: "4px" }}
-            />
-          </label>
-          
-          <label>
-            Logo Position:
-            <select
-              value={customizer.logoPosition}
-              onChange={(e) => updateLogoPosition(e.target.value as 'left'|'center'|'right')}
+        <div style={{ marginBottom: 12 }}>
+          {/* Logo Presets */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8, marginBottom: 8 }}>
+            <button 
+              onClick={() => { updateCustomizerLogoSize(50); updateLogoPosition('left'); }}
+              style={{ padding: "4px 8px", fontSize: "12px", border: "1px solid #ddd", borderRadius: "4px" }}
             >
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
-            </select>
-          </label>
+              📄 Small Left (50%)
+            </button>
+            <button 
+              onClick={() => { updateCustomizerLogoSize(80); updateLogoPosition('center'); }}
+              style={{ padding: "4px 8px", fontSize: "12px", border: "1px solid #ddd", borderRadius: "4px" }}
+            >
+              🎯 Medium Center (80%)
+            </button>
+            <button 
+              onClick={() => { updateCustomizerLogoSize(120); updateLogoPosition('right'); }}
+              style={{ padding: "4px 8px", fontSize: "12px", border: "1px solid #ddd", borderRadius: "4px" }}
+            >
+              🏢 Large Right (120%)
+            </button>
+            <button 
+              onClick={() => { updateCustomizerLogoSize(100); updateLogoPosition('center'); }}
+              style={{ padding: "4px 8px", fontSize: "12px", border: "1px solid #ddd", borderRadius: "4px" }}
+            >
+              ⭐ Hero Center (100%)
+            </button>
+          </div>
+          
+          {/* Manual Controls */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
+            <label>
+              Logo Size: {customizer.logoSize}%
+              <input
+                type="range"
+                min={10}
+                max={200}
+                value={customizer.logoSize}
+                onInput={onLogoSizeInput}
+                style={{ width: "100%", marginTop: "4px" }}
+              />
+            </label>
+            
+            <label>
+              Logo Position:
+              <select
+                value={customizer.logoPosition}
+                onChange={(e) => updateLogoPosition(e.target.value as 'left'|'center'|'right')}
+                style={{ width: "100%" }}
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+          </div>
         </div>
 
         {/* Color Pickers (onInput for instant feedback) */}
@@ -242,7 +267,11 @@ export default function ThemeSettingsPanel() {
             <input 
               type="color" 
               value={profile?.theme?.brandPrimary || '#3b82f6'} 
-              onInput={e => updateBrandPrimary(e.currentTarget.value)}
+              onInput={e => {
+                const value = e.currentTarget.value;
+                updateBrandPrimary(value);
+                applyLegacyThemeToCustomizer({ primary: value });
+              }}
             />
           </label>
           <label>
@@ -250,7 +279,11 @@ export default function ThemeSettingsPanel() {
             <input 
               type="color" 
               value={profile?.theme?.brandSecondary || '#64748b'} 
-              onInput={e => updateBrandSecondary(e.currentTarget.value)}
+              onInput={e => {
+                const value = e.currentTarget.value;
+                updateBrandSecondary(value);
+                applyLegacyThemeToCustomizer({ text: value });
+              }}
             />
           </label>
           <label>
@@ -258,7 +291,11 @@ export default function ThemeSettingsPanel() {
             <input 
               type="color" 
               value={profile?.theme?.background || '#ffffff'} 
-              onInput={e => updateBackground(e.currentTarget.value)}
+              onInput={e => {
+                const value = e.currentTarget.value;
+                updateBackground(value);
+                applyLegacyThemeToCustomizer({ background: value });
+              }}
             />
           </label>
         </div>
@@ -268,7 +305,11 @@ export default function ThemeSettingsPanel() {
             Font Family:
             <select 
               value={profile?.theme?.fontFamily || 'system-ui'} 
-              onInput={e => setTheme({ fontFamily: e.currentTarget.value })}
+              onChange={e => {
+                const value = e.target.value;
+                setTheme({ fontFamily: value });
+                applyLegacyThemeToCustomizer({ fontFamily: value });
+              }}
             >
               <option value="Roboto">Roboto</option>
               <option value="Arial">Arial</option>
@@ -292,7 +333,7 @@ export default function ThemeSettingsPanel() {
             Font Weight:
             <select 
               value={profile?.theme?.fontWeight || 'Normal'} 
-              onInput={e => setTheme({ fontWeight: e.currentTarget.value as any })}
+              onChange={e => setTheme({ fontWeight: e.target.value as any })}
             >
               <option value="Normal">Normal</option>
               <option value="SemiBold">SemiBold</option>
@@ -303,7 +344,7 @@ export default function ThemeSettingsPanel() {
             Density:
             <select 
               value={profile?.theme?.density || 'normal'} 
-              onInput={e => setTheme({ density: e.currentTarget.value as any })}
+              onChange={e => setTheme({ density: e.target.value as any })}
             >
               <option value="compact">Compact</option>
               <option value="normal">Normal</option>
@@ -314,7 +355,7 @@ export default function ThemeSettingsPanel() {
             Totals Align:
             <select 
               value={profile?.theme?.totalsAlign || 'right'} 
-              onInput={e => setTheme({ totalsAlign: e.currentTarget.value as any })}
+              onChange={e => setTheme({ totalsAlign: e.target.value as any })}
             >
               <option value="left">Left</option>
               <option value="center">Center</option>
@@ -327,7 +368,7 @@ export default function ThemeSettingsPanel() {
           <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input 
               type="checkbox" 
-              checked={profile?.theme?.altRowStripesOn || false}
+              defaultChecked={!!profile?.theme?.altRowStripesOn}
               onChange={e => setTheme({ altRowStripesOn: e.target.checked })}
             />
             Alternating row stripes
@@ -354,7 +395,7 @@ export default function ThemeSettingsPanel() {
               <input 
                 type="url" 
                 value={profile?.logo?.logoUrl || ""} 
-                onInput={e => setLogo({ logoUrl: e.currentTarget.value, logoDataUrl: undefined })}
+                onChange={e => setLogo({ logoUrl: e.target.value, logoDataUrl: undefined })}
                 placeholder="https://example.com/logo.png"
               />
             </label>
@@ -365,7 +406,7 @@ export default function ThemeSettingsPanel() {
               Logo Size:
               <select 
                 value={profile?.theme?.logoSize || 'md'} 
-                onInput={e => setTheme({ logoSize: e.currentTarget.value as any })}
+                onChange={e => setTheme({ logoSize: e.target.value as any })}
               >
                 <option value="sm">Small</option>
                 <option value="md">Medium</option>
@@ -376,7 +417,7 @@ export default function ThemeSettingsPanel() {
               Logo Align:
               <select 
                 value={profile?.theme?.logoAlign || 'left'} 
-                onInput={e => setTheme({ logoAlign: e.currentTarget.value as any })}
+                onChange={e => setTheme({ logoAlign: e.target.value as any })}
               >
                 <option value="left">Left</option>
                 <option value="center">Center</option>
@@ -405,7 +446,7 @@ export default function ThemeSettingsPanel() {
             Footer Layout:
             <select 
               value={footer.layout || "simple"} 
-              onInput={e => setFooter({ layout: e.currentTarget.value as any })}
+              onChange={e => setFooter({ layout: e.target.value as any })}
             >
               <option value="simple">Simple</option>
               <option value="corporate">Corporate</option>
@@ -416,7 +457,7 @@ export default function ThemeSettingsPanel() {
             Notes:
             <textarea 
               value={footer.notes || ""} 
-              onInput={e => setFooter({ notes: e.currentTarget.value })}
+              onChange={e => setFooter({ notes: e.target.value })}
               placeholder="Additional notes or terms..."
               rows={3}
             />
@@ -426,7 +467,7 @@ export default function ThemeSettingsPanel() {
             Contact Info:
             <input 
               value={footer.contact || ""} 
-              onInput={e => setFooter({ contact: e.currentTarget.value })}
+              onChange={e => setFooter({ contact: e.target.value })}
               placeholder="www.company.com | +1-555-123-4567"
             />
           </label>
@@ -435,7 +476,7 @@ export default function ThemeSettingsPanel() {
             Social Media:
             <input 
               value={footer.socialsCsv || ""} 
-              onInput={e => setFooter({ socialsCsv: e.currentTarget.value })}
+              onChange={e => setFooter({ socialsCsv: e.target.value })}
               placeholder="Instagram @handle, YouTube @channel"
             />
           </label>
@@ -445,7 +486,7 @@ export default function ThemeSettingsPanel() {
               Legal Text:
               <textarea 
                 value={footer.legal || ""} 
-                onInput={e => setFooter({ legal: e.currentTarget.value })}
+                onChange={e => setFooter({ legal: e.target.value })}
                 placeholder="Legal disclaimers, terms, etc..."
                 rows={2}
               />
@@ -456,7 +497,7 @@ export default function ThemeSettingsPanel() {
             <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <input 
                 type="checkbox" 
-                checked={footer.colorBarOn || false}
+                defaultChecked={!!footer.colorBarOn}
                 onChange={e => setFooter({ colorBarOn: e.target.checked })}
               />
               Color Bar
@@ -469,7 +510,7 @@ export default function ThemeSettingsPanel() {
                   min="1" 
                   max="20" 
                   value={footer.colorBarHeightPx || 4} 
-                  onInput={e => setFooter({ colorBarHeightPx: parseInt(e.currentTarget.value) })}
+                  onChange={e => setFooter({ colorBarHeightPx: parseInt(e.target.value) })}
                   style={{ width: "60px" }}
                 />
               </label>

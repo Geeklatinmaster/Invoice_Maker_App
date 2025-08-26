@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useInvoice, useCustomizerSettings, defaultCustomizer } from "@/features/invoice/store/useInvoice";
+import { useInvoice, useCustomizerSettings } from "@/features/invoice/store/useInvoice";
 import { usePrintSync } from "@/features/invoice/hooks/usePrintSync";
 import { fmtCurrency } from "../lib/format";
 import type { Profile } from "@/features/invoice/types/types";
@@ -8,8 +8,7 @@ const LOGO_PX: Record<"sm" | "md" | "lg", number> = { sm: 36, md: 64, lg: 92 };
 
 export default function Preview() {
   const s = useInvoice();
-  const customizerRaw = useCustomizerSettings();
-  const customizer = customizerRaw ?? defaultCustomizer; // fallback defensivo
+  const customizer = useCustomizerSettings();
   usePrintSync(); // sincroniza estilos @media print
 
   const iv = s.invoice;
@@ -37,6 +36,7 @@ export default function Preview() {
         padding: `${customizer.margins.top}px ${customizer.margins.right}px ${customizer.margins.bottom}px ${customizer.margins.left}px`,
         backgroundColor: customizer.colors.background,
         color: customizer.colors.text,
+        fontFamily: customizer.fontFamily,
         border: "1px solid #ddd",
         minHeight: "400px",
       },
