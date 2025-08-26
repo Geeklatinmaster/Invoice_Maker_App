@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { persist } from "zustand/middleware";
+import { shallow } from "zustand/shallow";
 import { nanoid } from "nanoid";
 import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset, FooterSettings, ThemeSettings, LogoSettings, LogoSize, LogoAlign } from "../types/types";
 
@@ -18,7 +19,7 @@ type Totals = {
   total: number;
 };
 
-type CustomizerSettings = {
+export type CustomizerSettings = {
   logoSize: number;
   logoPosition: 'left' | 'center' | 'right';
   margins: { top: number; right: number; bottom: number; left: number };
@@ -33,6 +34,14 @@ export const defaultCustomizer: CustomizerSettings = {
   colors: { primary: '#1e40af', text: '#1f2937', background: '#ffffff' },
   fontSize: { title: 24, body: 14, small: 12 },
 };
+
+const mergeCustomizer = (c?: Partial<CustomizerSettings>): CustomizerSettings => ({
+  ...defaultCustomizer,
+  ...(c ?? {}),
+  margins: { ...defaultCustomizer.margins, ...(c?.margins ?? {}) },
+  colors: { ...defaultCustomizer.colors, ...(c?.colors ?? {}) },
+  fontSize: { ...defaultCustomizer.fontSize, ...(c?.fontSize ?? {}) },
+});
 
 type InvoiceStore = {
   // State
@@ -518,42 +527,16 @@ export const useInvoice = create<InvoiceStore>()(
       {
         name: 'invoice-store',
         version: 2,
-        migrate: (persisted: any) => {
-          // Soporta { state: {...}, version } y también el estado "llano"
-          const hasWrapper = persisted && typeof persisted === 'object' && 'state' in persisted;
-          const base = hasWrapper ? persisted.state ?? {} : persisted ?? {};
-
-          const merged = {
-            ...base,
-            customizer: {
-              ...defaultCustomizer,
-              ...(base.customizer ?? {}),
-              margins: {
-                ...defaultCustomizer.margins,
-                ...(base.customizer?.margins ?? {}),
-              },
-              colors: {
-                ...defaultCustomizer.colors,
-                ...(base.customizer?.colors ?? {}),
-              },
-              fontSize: {
-                ...defaultCustomizer.fontSize,
-                ...(base.customizer?.fontSize ?? {}),
-              },
-            },
-          };
-
-          return hasWrapper
-            ? { ...persisted, state: merged, version: 2 }
-            : { state: merged, version: 2 };
+        // 🔴 IMPORTANTE: retornar **estado plano** (NO wrapper)
+        migrate: (persisted: any /* estado plano */, fromVersion: number) => {
+          const s = (persisted ?? {}) as Partial<InvoiceStore>;
+          return {
+            ...s,
+            customizer: mergeCustomizer((s as any).customizer),
+          } as InvoiceStore;
         },
-        onRehydrateStorage: () => (state) => {
-          // Log útil para detectar futuras roturas sin dejar la UI en blanco
-          if (!state?.customizer) {
-            console.warn('[rehydrate] customizer missing; injecting defaults');
-            state!.customizer = defaultCustomizer;
-          }
-        },
+
+        // ❌ NO mutar state dentro de onRehydrateStorage (eliminado para evitar loops)
       }
     )
   )

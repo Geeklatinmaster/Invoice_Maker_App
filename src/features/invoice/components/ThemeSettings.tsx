@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
-import { useInvoice, useCustomizerSettings } from "@/features/invoice/store/useInvoice";
-import type { ThemeSettings, FooterSettings, LogoSettings } from "@/features/invoice/types/types";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 
 function toast(msg: string) { try { alert(msg); } catch {} }
 

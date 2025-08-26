@@ -1,17 +1,15 @@
 import { useEffect } from 'react';
-import { useCustomizerSettings, defaultCustomizer } from '@/features/invoice/store/useInvoice';
+import { useCustomizerSettings } from '@/features/invoice/store/useInvoice';
 
 export const usePrintSync = () => {
-  const customizerRaw = useCustomizerSettings();
-  const customizer = customizerRaw ?? defaultCustomizer;
+  const customizer = useCustomizerSettings();
 
   useEffect(() => {
-    const styleId = 'dynamic-print-styles';
-    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
-
+    const id = 'dynamic-print-styles';
+    let styleEl = document.getElementById(id) as HTMLStyleElement | null;
     if (!styleEl) {
       styleEl = document.createElement('style');
-      styleEl.id = styleId;
+      styleEl.id = id;
       document.head.appendChild(styleEl);
     }
 
@@ -133,11 +131,9 @@ export const usePrintSync = () => {
       }
     `;
 
-    // Cleanup: elimina el nodo al desmontar para no apilar estilos en HMR/navegación
+    // ✅ Mantén el nodo; no lo borres en cada cambio (evita parpadeos y trabajo extra)
     return () => {
-      if (styleEl && styleEl.parentNode) {
-        styleEl.parentNode.removeChild(styleEl);
-      }
+      /* opcional: en unmount podrías removerlo, pero NO es necesario para dev */
     };
   }, [customizer]);
 };
