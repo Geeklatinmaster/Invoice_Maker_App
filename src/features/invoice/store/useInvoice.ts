@@ -18,6 +18,11 @@ type Totals = {
   total: number;
 };
 
+type TableSettings = {
+  stripes: boolean;
+  totalsAlign: 'left' | 'center' | 'right';
+};
+
 export type CustomizerSettings = {
   logoSize: number;
   logoPosition: 'left' | 'center' | 'right';
@@ -25,6 +30,7 @@ export type CustomizerSettings = {
   colors: { primary: string; text: string; background: string };
   fontSize: { title: number; body: number; small: number };
   fontFamily: string;
+  table: TableSettings;
 };
 
 export const defaultCustomizer: CustomizerSettings = {
@@ -34,6 +40,7 @@ export const defaultCustomizer: CustomizerSettings = {
   colors: { primary: '#1e40af', text: '#1f2937', background: '#ffffff' },
   fontSize: { title: 24, body: 14, small: 12 },
   fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
+  table: { stripes: false, totalsAlign: 'right' },
 };
 
 const mergeCustomizer = (c?: Partial<CustomizerSettings>): CustomizerSettings => ({
@@ -96,6 +103,7 @@ type InvoiceStore = {
   updateColors: (colors: Partial<CustomizerSettings['colors']>) => void;
   updateFontSize: (sizes: Partial<CustomizerSettings['fontSize']>) => void;
   updateFontFamily: (fontFamily: string) => void;
+  updateTable: (patch: Partial<TableSettings>) => void;
   applyLegacyThemeToCustomizer: (legacy: {
     primary?: string; text?: string; background?: string;
     fontFamily?: string; bodySize?: number; titleSize?: number;
@@ -538,6 +546,14 @@ export const useInvoice = create<InvoiceStore>()(
       },
     })),
 
+  updateTable: (patch) =>
+    set((s) => ({
+      customizer: {
+        ...s.customizer,
+        table: { ...s.customizer.table, ...patch },
+      },
+    })),
+
   // Bridge Legacy → Customizer (para que "Legacy theme colors & fonts" impacte Preview al instante)
   applyLegacyThemeToCustomizer: (legacy) =>
     set((s) => ({
@@ -560,17 +576,32 @@ export const useInvoice = create<InvoiceStore>()(
       }),
       {
         name: 'invoice-store',
-        version: 2,
-        // 🔴 IMPORTANTE: retornar **estado plano** (NO wrapper) + estado completo
-        migrate: (persisted: any /* estado plano */, fromVersion: number) => {
-          const s = (persisted ?? {}) as Partial<InvoiceStore>;
-          
-          // Ensure we return a complete state, merging with initial state
+        version: 3,
+        migrate: (persisted: any, from) => {
+          const s = (persisted ?? {}) as any;
+          const prevCustomizer = s.customizer ?? {};
+
+          // Intentar mapear del pasado:
+          const altRows = s?.profiles?.find?.((p: any) => p.id === s.selectedProfileId)?.theme?.altRowStripesOn;
+          const totalsAlign = s?.invoice?.totalsAlign;
+
           return {
-            ...initialState, // Start with complete initial state
-            ...s,           // Apply persisted values
-            customizer: mergeCustomizer((s as any).customizer), // Fix customizer
-          } as InvoiceStore;
+            ...s,
+            customizer: {
+              ...defaultCustomizer,
+              ...prevCustomizer,
+              fontFamily: prevCustomizer.fontFamily ?? defaultCustomizer.fontFamily,
+              table: {
+                ...defaultCustomizer.table,
+                ...(prevCustomizer.table ?? {}),
+                stripes: typeof altRows === 'boolean' ? altRows : (prevCustomizer.table?.stripes ?? defaultCustomizer.table.stripes),
+                totalsAlign: totalsAlign ?? (prevCustomizer.table?.totalsAlign ?? defaultCustomizer.table.totalsAlign),
+              },
+              margins: { ...defaultCustomizer.margins, ...(prevCustomizer.margins ?? {}) },
+              colors: { ...defaultCustomizer.colors, ...(prevCustomizer.colors ?? {}) },
+              fontSize: { ...defaultCustomizer.fontSize, ...(prevCustomizer.fontSize ?? {}) },
+            },
+          };
         },
 
         // ❌ NO mutar state dentro de onRehydrateStorage (eliminado para evitar loops)

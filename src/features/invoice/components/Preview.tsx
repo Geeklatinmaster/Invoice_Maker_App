@@ -125,9 +125,9 @@ export default function Preview() {
 
   const totalsContainerStyles = useMemo(() => ({
     marginTop: "16px",
-    textAlign: themeSettings.totalsAlign,
+    textAlign: customizer.table.totalsAlign,
     fontSize: `${themeSettings.baseFontPx + 1}px`,
-  }), [themeSettings.totalsAlign, themeSettings.baseFontPx]);
+  }), [customizer.table.totalsAlign, themeSettings.baseFontPx]);
 
   return (
     <section className="invoice-preview" style={dynamicStyles.container}>
@@ -169,7 +169,7 @@ export default function Preview() {
             <tr 
               key={item.id}
               style={{
-                backgroundColor: currentProfile?.theme?.altRowStripesOn && idx % 2 === 1 ? "#f8f9fa" : "transparent"
+                backgroundColor: customizer.table.stripes && idx % 2 === 1 ? "#f8f9fa" : "transparent"
               }}
             >
               <td style={{...tdStyles, textAlign: "left"}}>
