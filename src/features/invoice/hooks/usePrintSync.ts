@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { useCustomizerSettings } from '@/features/invoice/store/useInvoice';
+import { useCustomizerSettings, defaultCustomizer } from '@/features/invoice/store/useInvoice';
 
 export const usePrintSync = () => {
-  const customizer = useCustomizerSettings();
+  const customizerRaw = useCustomizerSettings();
+  const customizer = customizerRaw ?? defaultCustomizer;
 
   useEffect(() => {
     const styleId = 'dynamic-print-styles';

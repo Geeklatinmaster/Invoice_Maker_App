@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
-import { save, load } from "../lib/storage";
 import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset, FooterSettings, ThemeSettings, LogoSettings, LogoSize, LogoAlign } from "../types/types";
 
 // Robust code generation helpers
@@ -27,7 +26,7 @@ type CustomizerSettings = {
   fontSize: { title: number; body: number; small: number };
 };
 
-const defaultCustomizer: CustomizerSettings = {
+export const defaultCustomizer: CustomizerSettings = {
   logoSize: 100,
   logoPosition: 'left',
   margins: { top: 20, right: 20, bottom: 20, left: 20 },
@@ -519,17 +518,41 @@ export const useInvoice = create<InvoiceStore>()(
       {
         name: 'invoice-store',
         version: 2,
-        migrate: (state: any, version) => {
-          // Garantiza que customizer exista y tenga shape completo
-          const prev = state?.customizer ?? {};
-          state.customizer = {
-            ...defaultCustomizer,
-            ...prev,
-            margins: { ...defaultCustomizer.margins, ...(prev.margins ?? {}) },
-            colors: { ...defaultCustomizer.colors, ...(prev.colors ?? {}) },
-            fontSize: { ...defaultCustomizer.fontSize, ...(prev.fontSize ?? {}) },
+        migrate: (persisted: any) => {
+          // Soporta { state: {...}, version } y también el estado "llano"
+          const hasWrapper = persisted && typeof persisted === 'object' && 'state' in persisted;
+          const base = hasWrapper ? persisted.state ?? {} : persisted ?? {};
+
+          const merged = {
+            ...base,
+            customizer: {
+              ...defaultCustomizer,
+              ...(base.customizer ?? {}),
+              margins: {
+                ...defaultCustomizer.margins,
+                ...(base.customizer?.margins ?? {}),
+              },
+              colors: {
+                ...defaultCustomizer.colors,
+                ...(base.customizer?.colors ?? {}),
+              },
+              fontSize: {
+                ...defaultCustomizer.fontSize,
+                ...(base.customizer?.fontSize ?? {}),
+              },
+            },
           };
-          return state;
+
+          return hasWrapper
+            ? { ...persisted, state: merged, version: 2 }
+            : { state: merged, version: 2 };
+        },
+        onRehydrateStorage: () => (state) => {
+          // Log útil para detectar futuras roturas sin dejar la UI en blanco
+          if (!state?.customizer) {
+            console.warn('[rehydrate] customizer missing; injecting defaults');
+            state!.customizer = defaultCustomizer;
+          }
         },
       }
     )
@@ -575,10 +598,8 @@ export const useThemeSettings = () => useInvoice((state) => {
 export const useRenderVersion = () => useInvoice(state => state.renderVersion);
 
 // Selectores memoizados para customizer
-export const useCustomizerSettings = (): CustomizerSettings =>
+export const useCustomizerSettings = () =>
   useInvoice((s) => s.customizer);
 
 export const useCustomizerLogoSettings = () =>
-  useInvoice(
-    (s) => ({ size: s.customizer.logoSize, position: s.customizer.logoPosition })
-  );
+  useInvoice((s) => ({ size: s.customizer.logoSize, position: s.customizer.logoPosition }));
