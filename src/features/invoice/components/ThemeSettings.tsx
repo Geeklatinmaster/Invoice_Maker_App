@@ -328,7 +328,7 @@ export default function ThemeSettingsPanel() {
             <input 
               type="checkbox" 
               checked={profile?.theme?.altRowStripesOn || false}
-              onInput={e => setTheme({ altRowStripesOn: e.currentTarget.checked })}
+              onChange={e => setTheme({ altRowStripesOn: e.target.checked })}
             />
             Alternating row stripes
           </label>
@@ -457,7 +457,7 @@ export default function ThemeSettingsPanel() {
               <input 
                 type="checkbox" 
                 checked={footer.colorBarOn || false}
-                onInput={e => setFooter({ colorBarOn: e.currentTarget.checked })}
+                onChange={e => setFooter({ colorBarOn: e.target.checked })}
               />
               Color Bar
             </label>

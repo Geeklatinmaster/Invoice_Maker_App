@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { persist } from "zustand/middleware";
-import { shallow } from "zustand/shallow";
 import { nanoid } from "nanoid";
 import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset, FooterSettings, ThemeSettings, LogoSettings, LogoSize, LogoAlign } from "../types/types";
 
@@ -527,12 +526,15 @@ export const useInvoice = create<InvoiceStore>()(
       {
         name: 'invoice-store',
         version: 2,
-        // 🔴 IMPORTANTE: retornar **estado plano** (NO wrapper)
+        // 🔴 IMPORTANTE: retornar **estado plano** (NO wrapper) + estado completo
         migrate: (persisted: any /* estado plano */, fromVersion: number) => {
           const s = (persisted ?? {}) as Partial<InvoiceStore>;
+          
+          // Ensure we return a complete state, merging with initial state
           return {
-            ...s,
-            customizer: mergeCustomizer((s as any).customizer),
+            ...initialState, // Start with complete initial state
+            ...s,           // Apply persisted values
+            customizer: mergeCustomizer((s as any).customizer), // Fix customizer
           } as InvoiceStore;
         },
 
@@ -580,7 +582,7 @@ export const useThemeSettings = () => useInvoice((state) => {
 
 export const useRenderVersion = () => useInvoice(state => state.renderVersion);
 
-// Selectores memoizados para customizer
+// Selectores memoizados para customizer - direct object reference to prevent recreation
 export const useCustomizerSettings = () =>
   useInvoice((s) => s.customizer);
 
