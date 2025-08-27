@@ -83,6 +83,14 @@ export type InvoiceItem = {
 
 export type RetentionPreset = "AGENTE_RETENCION" | "NO_AGENTE" | "NONE";
 
+export type SocialLink = {
+  id: string;
+  label: string;   // "Instagram", "Teléfono", etc.
+  value: string;   // @user, url, número
+  icon: { type:'mui'; name:'Phone'|'Email'|'Instagram'|'WhatsApp'|'Language'|'LocationOn' }
+      | { type:'custom'; svg:string };
+};
+
 export type Invoice = {
   docType: DocType;       // INVOICE/QUOTE
   code: string;           // autogenerado
@@ -96,4 +104,8 @@ export type Invoice = {
   retentionPreset: RetentionPreset;
   footerId: FooterId;
   footer?: import('../store/useInvoice').FooterData;
+  socials?: SocialLink[];  // Social media links
+  brand?: {
+    logoUrl?: string;
+  };
 };

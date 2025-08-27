@@ -1,5 +1,5 @@
 import { useInvoice } from "../../store/useInvoice";
-import { ItemsTable, TotalsCard } from "../parts";
+import { ItemsTable, TotalsCard, FooterBar } from "../parts";
 
 export default function RedRibbon(){
   const s = useInvoice();
@@ -14,7 +14,7 @@ export default function RedRibbon(){
         <div style={{position:"relative", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
           <div style={{display:"flex", alignItems:"center", gap:"var(--sp)"}}>
             {profile?.logo?.logoUrl && <img src={profile.logo.logoUrl} alt="logo" style={{height:"var(--logoH)", filter:"brightness(0) invert(1)"}}/>}
-            <h1 style={{margin:0, color:"#fff", fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>INVOICE</h1>
+            <h1 style={{margin:0, color:"#fff", fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>{iv.docType ?? "INVOICE"}</h1>
           </div>
           <div style={{color:"#fff", textAlign:"right"}}>
             <div>{profile?.businessName}</div>
@@ -56,6 +56,7 @@ export default function RedRibbon(){
           </div>
           <TotalsCard/>
         </div>
+        <FooterBar />
       </div>
     </section>
   );

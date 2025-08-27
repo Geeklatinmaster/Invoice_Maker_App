@@ -1,5 +1,5 @@
 import { useInvoice } from "../../store/useInvoice";
-import { ItemsTable, TotalsCard } from "../parts";
+import { ItemsTable, TotalsCard, FooterBar } from "../parts";
 
 export default function YellowArc(){
   const s = useInvoice();
@@ -16,7 +16,7 @@ export default function YellowArc(){
           <div style={{display:"flex", alignItems:"center", gap:"var(--sp)"}}>
             {profile?.logo?.logoUrl && <img src={profile.logo.logoUrl} alt="logo" style={{height:"var(--logoH)"}}/>}
             <div style={{textAlign:"left"}}>
-              <h1 style={{margin:0, fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>INVOICE</h1>
+              <h1 style={{margin:0, fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>{iv.docType ?? "INVOICE"}</h1>
               <div style={{fontSize:"14px", color:"var(--txtMuted)"}}>
                 {profile?.businessName}
               </div>
@@ -64,6 +64,7 @@ export default function YellowArc(){
           </div>
           <TotalsCard/>
         </div>
+        <FooterBar />
       </div>
     </section>
   );

@@ -1,5 +1,5 @@
 import { useInvoice } from "../../store/useInvoice";
-import { ItemsTable, TotalsCard } from "../parts";
+import { ItemsTable, TotalsCard, FooterBar } from "../parts";
 
 export default function RedBadge(){
   const s = useInvoice(); 
@@ -11,7 +11,7 @@ export default function RedBadge(){
       border:`var(--bw) solid var(--border)`, borderRadius:"var(--r)", overflow:"hidden", position:"relative"}}>
       <div style={{position:"absolute", left:-40, top:24, transform:"rotate(-8deg)", zIndex:10}}>
         <div style={{background:"#d61f1f", color:"#fff", padding:"6px 24px", fontWeight:800,
-          borderRadius:"6px", boxShadow:"0 6px 18px rgba(214,31,31,.35)"}}>INVOICE</div>
+          borderRadius:"6px", boxShadow:"0 6px 18px rgba(214,31,31,.35)"}}>{iv.docType ?? "INVOICE"}</div>
       </div>
       
       <div style={{padding:"calc(var(--sp)*1.5) var(--sp) var(--sp) var(--sp)"}}>
@@ -24,7 +24,7 @@ export default function RedBadge(){
             </div>
           </div>
           <div style={{textAlign:"right", background:"var(--surface)", padding:"var(--sp)", borderRadius:"var(--r)"}}>
-            <div><strong>Invoice No:</strong> {iv.code ?? "0001"}</div>
+            <div><strong>{iv.docType ?? "Invoice"} No:</strong> {iv.code ?? "0001"}</div>
             <div><strong>Date:</strong> {iv.issueDate ?? ""}</div>
           </div>
         </div>
@@ -50,6 +50,7 @@ export default function RedBadge(){
           </div>
           <TotalsCard/>
         </div>
+        <FooterBar />
       </div>
     </section>
   );

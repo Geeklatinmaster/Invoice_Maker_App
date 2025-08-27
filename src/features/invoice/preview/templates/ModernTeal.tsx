@@ -2,6 +2,7 @@ import { useInvoice } from "../../store/useInvoice";
 import { useTheme } from "../../../../theme/useTheme";
 import { TheIcon } from "../../../../theme/Icon";
 import { fmtCurrency } from "../../lib/format";
+import { FooterBar } from "../parts";
 
 export function ModernTeal(){
   const s = useInvoice(); 
@@ -23,8 +24,8 @@ export function ModernTeal(){
         {(profile?.logo?.logoDataUrl || profile?.logo?.logoUrl) && 
           <img src={profile.logo.logoDataUrl || profile.logo.logoUrl} alt="logo" style={{height:"var(--logoH)"}}/>}
         <div>
-          <h1 style={{margin:0, fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>INVOICE</h1>
-          <small>Invoice #{iv.code ?? "0001"} • Date: {iv.issueDate ?? ""}</small>
+          <h1 style={{margin:0, fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>{iv.docType ?? "INVOICE"}</h1>
+          <small>{iv.docType ?? "Invoice"} #{iv.code ?? "0001"} • Date: {iv.issueDate ?? ""}</small>
         </div>
       </div>
       <address style={{textAlign:"right"}}>
@@ -88,6 +89,10 @@ export function ModernTeal(){
         <Row label="Grand Total" value={fmtCurrency(s.totals.total, profile?.currency || "USD", profile?.locale || "en-US")} strong accent />
       </div>
     </section>
+    
+    <div style={{padding:"var(--sp)"}}>
+      <FooterBar />
+    </div>
   </section>);
 }
 

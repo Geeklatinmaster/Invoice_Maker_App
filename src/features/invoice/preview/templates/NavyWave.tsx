@@ -1,6 +1,6 @@
 import { useInvoice } from "../../store/useInvoice";
 import { useTheme } from "../../../../theme/useTheme";
-import { ItemsTable, TotalsCard } from "../parts";
+import { ItemsTable, TotalsCard, FooterBar } from "../parts";
 
 export default function NavyWave(){
   const s = useInvoice();
@@ -15,10 +15,10 @@ export default function NavyWave(){
         <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:12}}>
           <div style={{display:"flex", alignItems:"center", gap:12}}>
             {profile?.logo?.logoUrl && <img src={profile.logo.logoUrl} alt="logo" style={{height:"var(--logoH)"}}/>}
-            <h1 style={{margin:0, fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>INVOICE</h1>
+            <h1 style={{margin:0, fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>{iv.docType ?? "INVOICE"}</h1>
           </div>
           <div style={{textAlign:"right"}}>
-            <small>Invoice No: {iv.code ?? "0001"}</small><br/>
+            <small>{iv.docType ?? "Invoice"} No: {iv.code ?? "0001"}</small><br/>
             <small>Date: {iv.issueDate ?? ""}</small>
           </div>
         </div>
@@ -43,6 +43,7 @@ export default function NavyWave(){
           </div>
           <TotalsCard/>
         </div>
+        <FooterBar />
       </div>
     </section>
   );

@@ -1,5 +1,6 @@
 import { useInvoice } from "../store/useInvoice";
 import { fmtCurrency } from "../lib/format";
+import FooterBar from "./FooterBar";
 
 export function ItemsTable(){
   const s = useInvoice();
@@ -28,7 +29,10 @@ export function ItemsTable(){
             background: idx%2===1 && (getStripe()) ? "rgba(0,0,0,var(--stripeOp))" : "transparent"
           }}>
             <td style={tdR()}>{String(idx+1).padStart(2,"0")}</td>
-            <td style={tdL()}>{it.title}</td>
+            <td style={tdL()}>
+              <div style={{fontWeight:600}}>{it.title}</div>
+              {it.description && <div style={{opacity:.85, fontSize:12, marginTop:2}}>{it.description}</div>}
+            </td>
             <td style={tdR()}>{fmtCurrency(it.unitPrice, currency, locale)}</td>
             <td style={tdR()}>{it.qty}</td>
             <td style={tdR()}>{fmtCurrency(it.unitPrice*it.qty, currency, locale)}</td>
@@ -70,3 +74,5 @@ export function TotalsCard(){
     </div>
   );
 }
+
+export { FooterBar };

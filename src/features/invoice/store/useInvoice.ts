@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
-import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset, FooterSettings, ThemeSettings, LogoSettings, LogoSize, LogoAlign } from "../types/types";
+import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset, FooterSettings, ThemeSettings, LogoSettings, LogoSize, LogoAlign, SocialLink } from "../types/types";
 
 // Robust code generation helpers
 const rand = (n = 5) => Math.random().toString(36).slice(2, 2 + n).toUpperCase();
@@ -129,6 +129,12 @@ type InvoiceStore = {
     primary?: string; text?: string; background?: string;
     fontFamily?: string; bodySize?: number; titleSize?: number;
   }) => void;
+  
+  // Social actions
+  addSocial: (link: SocialLink) => void;
+  updateSocial: (id: string, patch: Partial<SocialLink>) => void;
+  removeSocial: (id: string) => void;
+  updateInvoice: (updates: Partial<Invoice>) => void;
   
   // Computation
   compute: () => void;
@@ -602,6 +608,44 @@ export const useInvoice = create<InvoiceStore>()(
         },
       },
     })),
+
+  // Social actions
+  addSocial: (link: SocialLink) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        socials: [...(state.invoice.socials ?? []), link]
+      }
+    }));
+  },
+
+  updateSocial: (id: string, patch: Partial<SocialLink>) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        socials: (state.invoice.socials ?? []).map(s =>
+          s.id === id ? { ...s, ...patch } : s
+        )
+      }
+    }));
+  },
+
+  removeSocial: (id: string) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        socials: (state.invoice.socials ?? []).filter(s => s.id !== id)
+      }
+    }));
+  },
+
+  updateInvoice: (updates: Partial<Invoice>) => {
+    set(state => ({
+      invoice: { ...state.invoice, ...updates }
+    }));
+    // Auto-recompute totals after invoice update
+    get().compute();
+  },
       }),
       {
         name: 'invoice-store',

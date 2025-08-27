@@ -1,5 +1,5 @@
 import { useInvoice } from "../../store/useInvoice";
-import { ItemsTable, TotalsCard } from "../parts";
+import { ItemsTable, TotalsCard, FooterBar } from "../parts";
 
 export default function OrangeCut(){
   const s = useInvoice();
@@ -14,7 +14,7 @@ export default function OrangeCut(){
         alignItems:"flex-end", padding:"0 var(--sp) 10px", justifyContent:"space-between"}}>
         <div style={{display:"flex", alignItems:"center", gap:"var(--sp)"}}>
           {profile?.logo?.logoUrl && <img src={profile.logo.logoUrl} alt="logo" style={{height:"var(--logoH)", filter:"brightness(0) invert(1)"}}/>}
-          <h1 style={{margin:0, color:"#fff", fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>INVOICE</h1>
+          <h1 style={{margin:0, color:"#fff", fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>{iv.docType ?? "INVOICE"}</h1>
         </div>
         <div style={{textAlign:"right"}}>
           <small>No: {iv.code ?? "0001"} • Date: {iv.issueDate ?? ""}</small>
@@ -57,6 +57,7 @@ export default function OrangeCut(){
           </div>
           <TotalsCard/>
         </div>
+        <FooterBar />
       </div>
     </section>
   );
