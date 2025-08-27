@@ -93,6 +93,10 @@ export default function ThemeSettingsPanel() {
 
   // rAF para suavizar sliders
   const rafRef = useRef<number | null>(null);
+  
+  // Debounce refs para footer text
+  const notesDebRef = useRef<number | undefined>(undefined);
+  const legalDebRef = useRef<number | undefined>(undefined);
   const onLogoSizeInput = (e: React.FormEvent<HTMLInputElement>) => {
     const next = Number((e.currentTarget as HTMLInputElement).value);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -429,8 +433,14 @@ export default function ThemeSettingsPanel() {
               Notes:
               <textarea 
                 value={notes}
-                onChange={e => setNotes(e.target.value)}
-                onBlur={() => setInvoiceFooter({ notes })}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setNotes(v);
+                  // commit en vivo con debounce
+                  if (notesDebRef.current) window.clearTimeout(notesDebRef.current);
+                  notesDebRef.current = window.setTimeout(() => setInvoiceFooter({ notes: v }), 200);
+                }}
+                onBlur={() => setInvoiceFooter({ notes })}  // commit final por si quedó algo en el debounce
                 placeholder="Additional notes or terms..."
                 rows={4}
                 style={{ width: "100%", padding: "4px", marginTop: "4px" }}
@@ -465,7 +475,12 @@ export default function ThemeSettingsPanel() {
               Legal Text:
               <textarea 
                 value={legal}
-                onChange={e => setLegal(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setLegal(v);
+                  if (legalDebRef.current) window.clearTimeout(legalDebRef.current);
+                  legalDebRef.current = window.setTimeout(() => setInvoiceFooter({ legal: v }), 200);
+                }}
                 onBlur={() => setInvoiceFooter({ legal })}
                 placeholder="Legal disclaimers, terms, etc..."
                 rows={3}

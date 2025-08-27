@@ -6,6 +6,12 @@ import type { Profile } from "@/features/invoice/types/types";
 
 const LOGO_PX: Record<"sm" | "md" | "lg", number> = { sm: 36, md: 64, lg: 92 };
 
+const TextBlock: React.FC<{children?: string; as?: 'p'|'small'}> = ({ children, as='p' }) => {
+  if (!children) return null;
+  const Tag: any = as;
+  return <Tag style={{ whiteSpace: 'pre-wrap' }}>{children}</Tag>;
+};
+
 export default function Preview() {
   const s = useInvoice();
   const customizer = useCustomizerSettings();
@@ -131,31 +137,36 @@ export default function Preview() {
 
   // Render footer según layout
   function FooterContent() {
-    const invoiceFooter = s.invoice?.footer;
-    if (!invoiceFooter) return null;
+    const footer = s.invoice?.footer;
+    if (!footer) return null;
 
-    switch (invoiceFooter.layout) {
+    switch (footer.layout) {
       case 'Simple':
         return (
           <div>
-            {invoiceFooter.notes && <p>{invoiceFooter.notes}</p>}
-            {invoiceFooter.legal && <small>{invoiceFooter.legal}</small>}
+            <TextBlock>{footer.notes}</TextBlock>
+            <TextBlock as="small">{footer.legal}</TextBlock>
           </div>
         );
+
       case 'Minimal':
-        return (
-          <div>
-            {invoiceFooter.contactInfo && <p>{invoiceFooter.contactInfo}</p>}
-            {invoiceFooter.social && <p>{invoiceFooter.social}</p>}
-          </div>
-        );
-      default: // Corporate
+        // ✅ AHORA minimal también muestra notes y legal (además de contact/social)
         return (
           <div style={{ display: 'grid', gap: 6 }}>
-            {invoiceFooter.notes && <p>{invoiceFooter.notes}</p>}
-            {invoiceFooter.contactInfo && <p>{invoiceFooter.contactInfo}</p>}
-            {invoiceFooter.social && <p>{invoiceFooter.social}</p>}
-            {invoiceFooter.legal && <small>{invoiceFooter.legal}</small>}
+            <TextBlock>{footer.notes}</TextBlock>
+            <TextBlock>{footer.contactInfo}</TextBlock>
+            <TextBlock>{footer.social}</TextBlock>
+            <TextBlock as="small">{footer.legal}</TextBlock>
+          </div>
+        );
+
+      default: // 'Corporate'
+        return (
+          <div style={{ display: 'grid', gap: 6 }}>
+            <TextBlock>{footer.notes}</TextBlock>
+            <TextBlock>{footer.contactInfo}</TextBlock>
+            <TextBlock>{footer.social}</TextBlock>
+            <TextBlock as="small">{footer.legal}</TextBlock>
           </div>
         );
     }
