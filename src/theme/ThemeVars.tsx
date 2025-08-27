@@ -14,6 +14,11 @@ export default function ThemeVars(){
         --stripe:${t.stripe ? 1 : 0}; --stripeOp:${t.stripeOpacity};
         --logoH:${t.logoMaxH}px; --rowH:${t.tableRowH}px; --sp:${t.spacing}px;
       }
+      @media print {
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { background: var(--bg) !important; color: var(--txt) !important; }
+        table thead { background: var(--surface) !important; }
+      }
     `}</style>
   );
 }

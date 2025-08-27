@@ -8,16 +8,14 @@ import OrangeCut from "./templates/OrangeCut";
 import YellowArc from "./templates/YellowArc";
 
 export default function TemplateRenderer(){
-  const template = useTheme(s => s.template);
-  
-  switch (template){
+  switch (useTheme.getState().template){
     case "modernTeal": return <ModernTeal/>;
-    case "mintBand": return <MintBand/>;
-    case "navyWave": return <NavyWave/>;
-    case "redBadge": return <RedBadge/>;
+    case "navyWave":  return <NavyWave/>;
+    case "redBadge":  return <RedBadge/>;
     case "redRibbon": return <RedRibbon/>;
     case "orangeCut": return <OrangeCut/>;
     case "yellowArc": return <YellowArc/>;
+    case "mintBand":  return <MintBand/>;
     default: return <ModernTeal/>;
   }
 }

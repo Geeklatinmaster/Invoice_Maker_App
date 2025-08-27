@@ -64,7 +64,10 @@ export type Profile = {
   
   // NEW/ensure present:
   footer?: FooterSettings;
-  theme?: ThemeSettings;
+  theme?: ThemeSettings & {
+    template?: import('../../../theme/types').TemplateId;
+    tokens?: Partial<import('../../../theme/types').ThemeTokens>;
+  };
   logo?: LogoSettings;
 };
 

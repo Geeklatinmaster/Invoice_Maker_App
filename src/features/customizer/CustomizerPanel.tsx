@@ -120,17 +120,23 @@ function IconPicker({
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type === 'image/svg+xml') {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const svgContent = event.target?.result as string;
-        onChange('custom', svgContent);
-        setShowPicker(false);
-      };
-      reader.readAsText(file);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; 
+    if (!f) return;
+    
+    if (f.size > 200_000) { 
+      alert("SVG demasiado grande (>200KB)"); 
+      return; 
     }
+    
+    const text = await f.text();
+    if (/\bon[a-z]+=/i.test(text)) { 
+      alert("Atributos de evento no permitidos en SVG"); 
+      return; 
+    }
+    
+    onChange('custom', text);
+    setShowPicker(false);
   };
 
   return (
