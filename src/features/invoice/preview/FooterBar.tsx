@@ -1,12 +1,10 @@
 import { useInvoice } from "../store/useInvoice";
-import * as MuiIcons from '@mui/icons-material';
+import { MuiIcon } from "../../../ui/icons/allowlist";
 
 function Icon({ s }: { s: any }) {
   const size = 16;
   if (s.icon?.type === 'mui') {
-    // Use dynamic MUI icon by name
-    const IconComponent = (MuiIcons as any)[s.icon.name] ?? MuiIcons.Link;
-    return <IconComponent sx={{ fontSize: size }} />;
+    return <MuiIcon name={s.icon.name} size={size} />;
   }
   if (s.icon?.type === 'custom') {
     return <span 

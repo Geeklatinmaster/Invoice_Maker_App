@@ -29,7 +29,7 @@ export default function NavyWave(){
 
       <div style={{padding:"var(--sp)"}}>
         <div style={{marginBottom:"var(--sp)", padding:"var(--sp)", background:"var(--surface)", borderRadius:"var(--r)"}}>
-          <strong>Bill To:</strong><br/>
+          <strong>{iv.docType === "QUOTE" ? "Quote To:" : "Bill To:"}</strong><br/>
           {iv.customerName}<br/>
           {iv.customerAddress}
         </div>
@@ -38,8 +38,12 @@ export default function NavyWave(){
         
         <div style={{display:"grid", gridTemplateColumns:"1fr 280px", gap:"var(--sp)", marginTop:"var(--sp)"}}>
           <div>
-            <div style={{fontWeight:700, color:"var(--acc)"}}>TERMS & CONDITIONS</div>
-            <p style={{margin:"8px 0"}}>Payment is due within 30 days of invoice date. Late payments may incur additional fees.</p>
+            <div style={{fontWeight:700, color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "QUOTE VALIDITY" : "TERMS & CONDITIONS"}</div>
+            <p style={{margin:"8px 0"}}>
+              {iv.docType === "QUOTE" 
+                ? "This quote is valid for 30 days from the quote date." 
+                : "Payment is due within 30 days of invoice date. Late payments may incur additional fees."}
+            </p>
           </div>
           <TotalsCard/>
         </div>

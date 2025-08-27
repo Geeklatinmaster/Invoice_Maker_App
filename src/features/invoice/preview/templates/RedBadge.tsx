@@ -31,7 +31,7 @@ export default function RedBadge(){
 
         <div style={{marginBottom:"var(--sp)", padding:"var(--sp)", 
           background:"var(--surface)", borderRadius:"var(--r)", border:`var(--bw) solid var(--border)`}}>
-          <strong style={{color:"var(--acc)"}}>Bill To:</strong><br/>
+          <strong style={{color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "Quote To:" : "Bill To:"}</strong><br/>
           <div style={{marginTop:8}}>
             {iv.customerName}<br/>
             {iv.customerEmail && <><small>{iv.customerEmail}</small><br/></>}
@@ -43,9 +43,11 @@ export default function RedBadge(){
         
         <div style={{display:"grid", gridTemplateColumns:"1fr 280px", gap:"var(--sp)", marginTop:"var(--sp)"}}>
           <div>
-            <div style={{fontWeight:700, color:"var(--acc)"}}>PAYMENT NOTES</div>
+            <div style={{fontWeight:700, color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "QUOTE VALIDITY" : "PAYMENT NOTES"}</div>
             <p style={{margin:"8px 0", fontSize:"14px", color:"var(--txtMuted)"}}>
-              Please make payment within 30 days. Thank you for your business!
+              {iv.docType === "QUOTE" 
+                ? "This quote is valid for 30 days from the quote date." 
+                : "Please make payment within 30 days. Thank you for your business!"}
             </p>
           </div>
           <TotalsCard/>

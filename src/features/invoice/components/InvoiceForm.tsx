@@ -1,5 +1,6 @@
 import { useInvoice } from "@/features/invoice/store/useInvoice";
 import { exportInvoicePdf } from "@/features/invoice/pdf/exportPdf";
+import { useTheme } from "@/theme/useTheme";
 import ThemeSettingsPanel from "./ThemeSettings";
 
 // Helper functions
@@ -121,12 +122,17 @@ export default function InvoiceForm() {
               return;
             }
             try {
+              // Get current theme tokens
+              const themeState = useTheme.getState();
+              
               localStorage.setItem("invoice:last", JSON.stringify({
                 invoice: currentInvoice,
                 totals: currentState.totals,
                 profile: currentState.selectedProfileId
                   ? currentState.profiles.find(p => p.id === currentState.selectedProfileId)
-                  : undefined
+                  : undefined,
+                theme: themeState.tokens,
+                template: themeState.template
               }));
               window.open("/print.html", "_blank", "noopener,noreferrer");
             } catch (e) {

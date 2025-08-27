@@ -42,7 +42,7 @@ export default function YellowArc(){
           </div>
           <div style={{padding:"var(--sp)", background:"var(--surface)", borderRadius:"var(--r)", 
             border:`var(--bw) solid var(--border)`, boxShadow:"0 2px 4px rgba(0,0,0,0.1)"}}>
-            <strong style={{color:"var(--acc)"}}>Billed To:</strong><br/>
+            <strong style={{color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "Quote To:" : "Billed To:"}</strong><br/>
             <div style={{marginTop:8}}>
               <strong>{iv.customerName}</strong><br/>
               {iv.customerAddress}<br/>

@@ -35,7 +35,7 @@ export default function OrangeCut(){
           </div>
           <div>
             <div style={{padding:"var(--sp)", background:"var(--surface)", borderRadius:"var(--r)", border:`var(--bw) solid var(--border)`}}>
-              <strong style={{color:"var(--acc)"}}>Bill To:</strong><br/>
+              <strong style={{color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "Quote To:" : "Bill To:"}</strong><br/>
               <div style={{marginTop:8}}>
                 {iv.customerName}<br/>
                 {iv.customerAddress}
@@ -48,10 +48,19 @@ export default function OrangeCut(){
         
         <div style={{display:"grid", gridTemplateColumns:"1fr 280px", gap:"var(--sp)", marginTop:"var(--sp)"}}>
           <div>
-            <div style={{fontWeight:700, color:"var(--acc)"}}>PAYMENT CONDITIONS</div>
+            <div style={{fontWeight:700, color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "QUOTE CONDITIONS" : "PAYMENT CONDITIONS"}</div>
             <ul style={{margin:"8px 0", paddingLeft:"20px", fontSize:"14px"}}>
-              <li>Payment due within 30 days</li>
-              <li>Late fees may apply after due date</li>
+              {iv.docType === "QUOTE" ? (
+                <>
+                  <li>Quote valid for 30 days</li>
+                  <li>Subject to availability</li>
+                </>
+              ) : (
+                <>
+                  <li>Payment due within 30 days</li>
+                  <li>Late fees may apply after due date</li>
+                </>
+              )}
               <li>All prices in {profile?.currency || 'USD'}</li>
             </ul>
           </div>

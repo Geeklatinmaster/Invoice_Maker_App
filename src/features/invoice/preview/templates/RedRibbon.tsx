@@ -30,7 +30,7 @@ export default function RedRibbon(){
       <div style={{padding:"var(--sp)", paddingTop:"calc(var(--sp) + 8px)"}}>
         <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"var(--sp)", marginBottom:"var(--sp)"}}>
           <div style={{padding:"var(--sp)", background:"var(--surface)", borderRadius:"var(--r)"}}>
-            <strong style={{color:"var(--acc)"}}>Bill To:</strong><br/>
+            <strong style={{color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "Quote To:" : "Bill To:"}</strong><br/>
             <div style={{marginTop:8}}>
               {iv.customerName}<br/>
               {iv.customerAddress}
@@ -49,9 +49,11 @@ export default function RedRibbon(){
         
         <div style={{display:"grid", gridTemplateColumns:"1fr 280px", gap:"var(--sp)", marginTop:"var(--sp)"}}>
           <div>
-            <div style={{fontWeight:700, color:"var(--acc)"}}>PAYMENT TERMS</div>
+            <div style={{fontWeight:700, color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "QUOTE VALIDITY" : "PAYMENT TERMS"}</div>
             <p style={{margin:"8px 0", fontSize:"14px"}}>
-              Net 30 days. Payment due within 30 days of invoice date.
+              {iv.docType === "QUOTE" 
+                ? "This quote is valid for 30 days from the quote date." 
+                : "Net 30 days. Payment due within 30 days of invoice date."}
             </p>
           </div>
           <TotalsCard/>

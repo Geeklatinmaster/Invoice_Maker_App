@@ -1,12 +1,11 @@
 import { useRef } from "react";
 import { useInvoice } from "../invoice/store/useInvoice";
-import { Box, Stack, TextField, Select, MenuItem, IconButton, Button } from "@mui/material";
+import { Stack, TextField, Select, MenuItem, IconButton, Button } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UploadIcon from "@mui/icons-material/Upload";
 import { nanoid } from "nanoid";
-
-const ALLOW = ['Phone','Email','Instagram','WhatsApp','Language','LocationOn'] as const;
-type MuiName = typeof ALLOW[number];
+import DOMPurify from "dompurify";
+import { ICON_OPTIONS, IconName } from "../../ui/icons/allowlist";
 
 export default function SocialList(){
   const s = useInvoice();
@@ -17,7 +16,7 @@ export default function SocialList(){
       {list.map(row => <Row key={row.id} rowId={row.id} />)}
       <Button variant="outlined" onClick={()=>{
         const id = nanoid();
-        s.addSocial?.({ id, label:'', value:'', icon:{type:'mui', name:'Phone'} });
+        s.addSocial?.({ id, label:'', value:'', icon:{type:'mui', name:'Phone'} as any });
       }}>+ Add</Button>
     </Stack>
   );
@@ -31,9 +30,13 @@ function Row({rowId}:{rowId:string}){
   return (
     <Stack direction="row" spacing={1} alignItems="center">
       <Select size="small" value={row.icon.type==='mui' ? row.icon.name : '(custom)'}
-        onChange={(e)=> s.updateSocial?.(rowId,{ icon:{type:'mui', name:e.target.value as MuiName} }) }
+        onChange={(e)=> {
+          if(e.target.value !== '(custom)') {
+            s.updateSocial?.(rowId,{ icon:{type:'mui', name:e.target.value as IconName} as any });
+          }
+        }}
         sx={{ width: 150 }}>
-        {ALLOW.map(n=><MenuItem key={n} value={n}>{n}</MenuItem>)}
+        {ICON_OPTIONS.map(n=><MenuItem key={n} value={n}>{n}</MenuItem>)}
         <MenuItem value="(custom)">(custom SVG)</MenuItem>
       </Select>
 
@@ -48,9 +51,13 @@ function Row({rowId}:{rowId:string}){
           onChange={async e=>{
             const f = e.target.files?.[0]; if(!f) return;
             if (f.size > 200_000) { alert("SVG > 200KB"); return; }
-            const svg = await f.text();
-            if (/\bon[a-z]+=/i.test(svg)) { alert("SVG inválido (event attrs)"); return; }
-            s.updateSocial?.(rowId,{ icon:{type:'custom', svg} });
+            const raw = await f.text();
+            const clean = DOMPurify.sanitize(raw, {
+              USE_PROFILES: { svg: true },
+              FORBID_TAGS: ['script','iframe','object'],
+              FORBID_ATTR: ['onclick', 'onload', 'onerror', 'onmouseover', 'xmlns:xlink']
+            });
+            s.updateSocial?.(rowId,{ icon:{type:'custom', svg: clean} as any });
           }}/>
       </IconButton>
 

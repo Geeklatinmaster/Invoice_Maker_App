@@ -36,7 +36,9 @@ export function ModernTeal(){
 
     <section style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"var(--sp)", padding:"var(--sp)"}}>
       <div style={{background:"var(--surface)", border:`var(--bw) solid var(--border)`, borderRadius:"var(--r)", padding:"var(--sp)"}}>
-        <div style={{fontWeight:700, color:"white", background:"var(--acc)", borderRadius:"calc(var(--r)/2)", display:"inline-block", padding:"2px 8px"}}>INVOICE TO</div>
+        <div style={{fontWeight:700, color:"white", background:"var(--acc)", borderRadius:"calc(var(--r)/2)", display:"inline-block", padding:"2px 8px"}}>
+          {iv.docType === "QUOTE" ? "QUOTE TO" : "INVOICE TO"}
+        </div>
         <div style={{fontWeight:600, marginTop:6}}>{iv.customerName}</div>
         <div style={{opacity:.9}}>{iv.customerAddress}</div>
         <div style={{display:"flex", gap:12, marginTop:6, color:"var(--txtMuted)"}}>
@@ -80,8 +82,12 @@ export function ModernTeal(){
 
     <section style={{display:"grid", gridTemplateColumns:"1fr 280px", gap:"var(--sp)", padding:"var(--sp)"}}>
       <div>
-        <div style={{fontWeight:700, color:"var(--acc)"}}>TERMS & CONDITIONS</div>
-        <p style={{opacity:.9}}>Payment is due within 30 days of invoice date.</p>
+        <div style={{fontWeight:700, color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "QUOTE VALIDITY" : "TERMS & CONDITIONS"}</div>
+        <p style={{opacity:.9}}>
+          {iv.docType === "QUOTE" 
+            ? "This quote is valid for 30 days from the quote date." 
+            : "Payment is due within 30 days of invoice date."}
+        </p>
       </div>
       <div style={{background:"var(--surface)", border:`var(--bw) solid var(--border)`, borderRadius:"var(--r)", padding:"var(--sp)"}}>
         <Row label="Sub Total" value={fmtCurrency(s.totals.subtotal, profile?.currency || "USD", profile?.locale || "en-US")}/>

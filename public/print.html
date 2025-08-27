@@ -5,23 +5,23 @@
     <title>Invoice Print</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <style>
+      /* Live Customizer CSS Variables - same as ThemeVars.tsx */
       :root{
-        --brand-primary:#2d3e8b; --brand-secondary:#9bb3d4; --text:#111; --bg:#fff; --muted:#6b7280; --accent:#427bff; --base-size:15px;
+        --acc:#2d3e8b; --acc2:#9bb3d4; --txt:#111; --txtMuted:#6b7280; --bg:#fff; --surface:#fafafa; --border:#e5e7eb;
+        --heading:system-ui; --body:system-ui; --hW:700; --bW:400;
+        --r:6px; --bw:1px; --stripe:0; --stripeOp:0.05; --logoH:64px; --rowH:48px; --sp:16px;
       }
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:24px; background:var(--bg); color:var(--text); font-size: var(--base-size); }
-      h1 { margin:0 0 16px; color: var(--brand-primary); }
-      table { width:100%; border-collapse:collapse; margin-top:16px }
-      th,td { border-bottom:1px solid #ddd; padding:6px 8px; text-align:left }
-      th { background-color: var(--brand-primary); color: white; font-weight: bold; }
-      tfoot td { font-weight:600 }
-      .row { display:flex; gap:32px; justify-content:space-between; align-items:flex-start }
-      .col { min-width:280px }
-      .muted { color:var(--muted); font-size:12px; margin-top:16px }
-      .totals-right td { text-align:right }
-      .stripe tbody tr:nth-child(even){ background: color-mix(in srgb, var(--brand-secondary) 12%, transparent) }
-      .sep-underline th, .sep-underline td { border-bottom:1px solid currentColor }
-      .footer-section { margin-top: 40px; padding-top: 10px; font-size: 12px; color: var(--muted); }
-      .color-bar { margin-bottom: 8px; }
+      @media print {
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { background: var(--bg) !important; color: var(--txt) !important; }
+        @page { margin: 12mm; size: A4; }
+      }
+      body { 
+        font-family: var(--body), system-ui, -apple-system, Segoe UI, Roboto, sans-serif; 
+        margin: 0; padding: var(--sp); background: var(--bg); color: var(--txt); 
+        font-weight: var(--bW); font-size: 14px; line-height: 1.5;
+      }
+      #root { max-width: 210mm; margin: 0 auto; }
     </style>
   </head>
   <body>
@@ -44,33 +44,42 @@
       const snap = localStorage.getItem("invoice:last");
       if(!snap){ document.body.innerHTML = "<p>No invoice data found. Export from the app first.</p>"; }
       else {
-        const { invoice, totals, profile } = JSON.parse(snap);
-        const theme  = (profile && profile.theme)  || {};
+        const { invoice, totals, profile, theme, template } = JSON.parse(snap);
+        const tokens = theme || {};
         const footer = (profile && profile.footer) || {};
-        const logo   = (profile && profile.logo)   || {};
+        const logo = (profile && profile.logo) || {};
 
-        // CSS vars
+        // Live Customizer CSS Variables (matching ThemeVars.tsx)
         const r = document.documentElement;
-        r.style.setProperty("--brand-primary", theme.brandPrimary || "#2d3e8b");
-        r.style.setProperty("--brand-secondary", theme.brandSecondary || "#9bb3d4");
-        r.style.setProperty("--text", theme.text || "#111");
-        r.style.setProperty("--bg", theme.background || "#fff");
-        r.style.setProperty("--muted", theme.muted || "#6b7280");
-        r.style.setProperty("--accent", theme.accent || "#427bff");
-        r.style.setProperty("--base-size", (theme.baseFontPx || 15) + "px");
+        r.style.setProperty("--acc", tokens.accent || "#04A7A3");
+        r.style.setProperty("--acc2", tokens.accent2 || "#027e7b");
+        r.style.setProperty("--txt", tokens.text || "#0f172a");
+        r.style.setProperty("--txtMuted", tokens.textMuted || "#64748b");
+        r.style.setProperty("--bg", tokens.bg || "#ffffff");
+        r.style.setProperty("--surface", tokens.surface || "#f8fafc");
+        r.style.setProperty("--border", tokens.border || "#e2e8f0");
+        r.style.setProperty("--heading", tokens.headingFont || "Inter");
+        r.style.setProperty("--body", tokens.bodyFont || "Inter");
+        r.style.setProperty("--hW", String(tokens.headingWeight || 700));
+        r.style.setProperty("--bW", String(tokens.bodyWeight || 400));
+        r.style.setProperty("--r", (tokens.radius || 12) + "px");
+        r.style.setProperty("--bw", (tokens.borderWidth || 1) + "px");
+        r.style.setProperty("--stripe", tokens.stripe ? "1" : "0");
+        r.style.setProperty("--stripeOp", String(tokens.stripeOpacity || 0.45));
+        r.style.setProperty("--logoH", (tokens.logoMaxH || 56) + "px");
+        r.style.setProperty("--rowH", (tokens.tableRowH || 44) + "px");
+        r.style.setProperty("--sp", (tokens.spacing || 12) + "px");
 
-        // Logo
-        const logoUrl = (logo && (logo.logoDataUrl || logo.logoUrl)) || "";
+        // Logo (using Live Customizer tokens)
+        const logoUrl = (logo && (logo.logoDataUrl || logo.logoUrl)) || 
+                        (invoice && invoice.brand && (invoice.brand.logoDataUrl || invoice.brand.logoUrl)) || "";
         if (logoUrl) {
           const img = new Image();
           img.src = logoUrl;
-          img.style.height = (LOGO_PX[theme.logoSize || "lg"] || 92) + "px";
+          img.style.height = (tokens.logoMaxH || 56) + "px";
           img.style.width = "auto";
           img.style.objectFit = "contain";
           const holder = document.getElementById("logoHolder");
-          holder.style.justifyContent =
-            theme.logoAlign === "right" ? "flex-end" :
-            theme.logoAlign === "center" ? "center" : "flex-start";
           holder.appendChild(img);
         }
 
