@@ -92,4 +92,5 @@ export type Invoice = {
   globalTaxRate?: number;   // % si se usa global
   retentionPreset: RetentionPreset;
   footerId: FooterId;
+  footer?: import('../store/useInvoice').FooterData;
 };

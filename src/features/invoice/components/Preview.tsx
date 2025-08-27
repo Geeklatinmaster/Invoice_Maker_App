@@ -129,6 +129,38 @@ export default function Preview() {
     fontSize: `${themeSettings.baseFontPx + 1}px`,
   }), [customizer.table.totalsAlign, themeSettings.baseFontPx]);
 
+  // Render footer según layout
+  function FooterContent() {
+    const invoiceFooter = s.invoice?.footer;
+    if (!invoiceFooter) return null;
+
+    switch (invoiceFooter.layout) {
+      case 'Simple':
+        return (
+          <div>
+            {invoiceFooter.notes && <p>{invoiceFooter.notes}</p>}
+            {invoiceFooter.legal && <small>{invoiceFooter.legal}</small>}
+          </div>
+        );
+      case 'Minimal':
+        return (
+          <div>
+            {invoiceFooter.contactInfo && <p>{invoiceFooter.contactInfo}</p>}
+            {invoiceFooter.social && <p>{invoiceFooter.social}</p>}
+          </div>
+        );
+      default: // Corporate
+        return (
+          <div style={{ display: 'grid', gap: 6 }}>
+            {invoiceFooter.notes && <p>{invoiceFooter.notes}</p>}
+            {invoiceFooter.contactInfo && <p>{invoiceFooter.contactInfo}</p>}
+            {invoiceFooter.social && <p>{invoiceFooter.social}</p>}
+            {invoiceFooter.legal && <small>{invoiceFooter.legal}</small>}
+          </div>
+        );
+    }
+  }
+
   return (
     <section className="invoice-preview" style={dynamicStyles.container}>
       {/* NEW CUSTOMIZER LOGO (priority over legacy) */}
@@ -233,37 +265,19 @@ export default function Preview() {
       </div>
 
       {/* Footer */}
-      {(footer.notes || footer.contact || footer.socialsCsv || footer.legal) && (
-        <div style={{ marginTop: "24px" }}>
-          {/* Color bar */}
-          {footer.colorBarOn && footer.colorBarHeightPx && (
-            <div className="invoice-color-bar" style={{
-              height: `${footer.colorBarHeightPx}px`,
-              backgroundColor: colorSettings.brandPrimary,
-              marginBottom: "8px",
-            }} />
-          )}
-          
-          <div className="invoice-footer" style={{ 
-            fontSize: `${customizer.fontSize.small}px`, 
-            color: colorSettings.muted,
-            lineHeight: footer.layout === "corporate" ? "1.5" : "1.3"
-          }}>
-            {footer.notes && (
-              <div style={{ marginBottom: "4px" }}>{footer.notes}</div>
-            )}
-            {footer.contact && (
-              <div style={{ marginBottom: "4px" }}>{footer.contact}</div>
-            )}
-            {footer.socialsCsv && (
-              <div style={{ marginBottom: "4px" }}>{footer.socialsCsv}</div>
-            )}
-            {footer.layout === "corporate" && footer.legal && (
-              <div style={{ marginBottom: "4px", fontStyle: "italic" }}>{footer.legal}</div>
-            )}
-          </div>
-        </div>
-      )}
+      <footer style={{
+        marginTop: 16,
+        borderTop: '1px solid #e5e7eb',
+        paddingTop: 12,
+      }}>
+        <FooterContent />
+        <div style={{
+          height: `${s.invoice?.footer?.colorBarHeight ?? 0}px`,
+          background: customizer.colors.primary,
+          display: (s.invoice?.footer?.colorBarOn && (s.invoice?.footer?.colorBarHeight ?? 0) > 0) ? 'block' : 'none',
+          marginTop: 8,
+        }} />
+      </footer>
     </section>
   );
 }

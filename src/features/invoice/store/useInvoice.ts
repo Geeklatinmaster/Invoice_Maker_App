@@ -23,6 +23,26 @@ type TableSettings = {
   totalsAlign: 'left' | 'center' | 'right';
 };
 
+export type FooterData = {
+  layout: 'Simple' | 'Corporate' | 'Minimal';
+  notes: string;
+  contactInfo: string;
+  social: string;
+  legal: string;
+  colorBarOn: boolean;
+  colorBarHeight: number;   // px
+};
+
+const defaultFooter: FooterData = {
+  layout: 'Corporate',
+  notes: '',
+  contactInfo: '',
+  social: '',
+  legal: '',
+  colorBarOn: false,
+  colorBarHeight: 0,
+};
+
 export type CustomizerSettings = {
   logoSize: number;
   logoPosition: 'left' | 'center' | 'right';
@@ -104,6 +124,7 @@ type InvoiceStore = {
   updateFontSize: (sizes: Partial<CustomizerSettings['fontSize']>) => void;
   updateFontFamily: (fontFamily: string) => void;
   updateTable: (patch: Partial<TableSettings>) => void;
+  setInvoiceFooter: (patch: Partial<FooterData>) => void;
   applyLegacyThemeToCustomizer: (legacy: {
     primary?: string; text?: string; background?: string;
     fontFamily?: string; bodySize?: number; titleSize?: number;
@@ -554,6 +575,14 @@ export const useInvoice = create<InvoiceStore>()(
       },
     })),
 
+  setInvoiceFooter: (patch) =>
+    set((s) => ({
+      invoice: {
+        ...s.invoice,
+        footer: { ...(s.invoice?.footer ?? defaultFooter), ...patch },
+      },
+    })),
+
   // Bridge Legacy → Customizer (para que "Legacy theme colors & fonts" impacte Preview al instante)
   applyLegacyThemeToCustomizer: (legacy) =>
     set((s) => ({
@@ -576,10 +605,11 @@ export const useInvoice = create<InvoiceStore>()(
       }),
       {
         name: 'invoice-store',
-        version: 3,
-        migrate: (persisted: any, from) => {
+        version: 4,
+        migrate: (persisted: any, from: number) => {
           const s = (persisted ?? {}) as any;
           const prevCustomizer = s.customizer ?? {};
+          const prev = s.invoice?.footer ?? {};
 
           // Intentar mapear del pasado:
           const altRows = s?.profiles?.find?.((p: any) => p.id === s.selectedProfileId)?.theme?.altRowStripesOn;
@@ -600,6 +630,16 @@ export const useInvoice = create<InvoiceStore>()(
               margins: { ...defaultCustomizer.margins, ...(prevCustomizer.margins ?? {}) },
               colors: { ...defaultCustomizer.colors, ...(prevCustomizer.colors ?? {}) },
               fontSize: { ...defaultCustomizer.fontSize, ...(prevCustomizer.fontSize ?? {}) },
+            },
+            invoice: {
+              ...s.invoice,
+              footer: {
+                ...defaultFooter,
+                ...prev,
+                // normaliza tipos
+                colorBarOn: !!(prev.colorBarOn),
+                colorBarHeight: Number(prev.colorBarHeight ?? defaultFooter.colorBarHeight),
+              },
             },
           };
         },

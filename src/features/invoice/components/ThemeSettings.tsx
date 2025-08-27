@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useInvoice } from "@/features/invoice/store/useInvoice";
+import { useInvoice, type FooterData } from "@/features/invoice/store/useInvoice";
 
 function toast(msg: string) { try { alert(msg); } catch {} }
 
@@ -18,6 +18,8 @@ export default function ThemeSettingsPanel() {
   const profiles = useInvoice(s => s.profiles);
   const customizer = useInvoice(s => s.customizer);
   const setFooter = useInvoice(s => s.setFooter);
+  const invoiceFooter = useInvoice(s => s.invoice?.footer) as FooterData | undefined;
+  const setInvoiceFooter = useInvoice(s => s.setInvoiceFooter);
   
   // Customizer actions
   const updateCustomizerLogoSize = useInvoice(s => s.updateCustomizerLogoSize);
@@ -42,6 +44,21 @@ export default function ThemeSettingsPanel() {
   const [rightMargin, setRightMargin] = useState(customizer.margins.right);
   const [bottomMargin, setBottomMargin] = useState(customizer.margins.bottom);
   const [leftMargin, setLeftMargin] = useState(customizer.margins.left);
+
+  // Estados locales para footer (edición fluida sin spamear el store)
+  const [notes, setNotes] = useState(invoiceFooter?.notes ?? "");
+  const [contact, setContact] = useState(invoiceFooter?.contactInfo ?? "");
+  const [social, setSocial] = useState(invoiceFooter?.social ?? "");
+  const [legal, setLegal] = useState(invoiceFooter?.legal ?? "");
+  const [height, setHeight] = useState<number>(invoiceFooter?.colorBarHeight ?? 0);
+
+  useEffect(() => {
+    setNotes(invoiceFooter?.notes ?? "");
+    setContact(invoiceFooter?.contactInfo ?? "");
+    setSocial(invoiceFooter?.social ?? "");
+    setLegal(invoiceFooter?.legal ?? "");
+    setHeight(Number(invoiceFooter?.colorBarHeight ?? 0));
+  }, [invoiceFooter?.notes, invoiceFooter?.contactInfo, invoiceFooter?.social, invoiceFooter?.legal, invoiceFooter?.colorBarHeight]);
 
   // Logo upload
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -398,22 +415,24 @@ export default function ThemeSettingsPanel() {
             <label>
               Footer Layout:
               <select 
-                value={footer.layout || "simple"} 
-                onChange={e => setFooter({ layout: e.target.value as any })}
+                value={invoiceFooter?.layout || "Corporate"} 
+                onChange={e => setInvoiceFooter({ layout: e.target.value as any })}
                 style={{ width: "100%", padding: "4px", marginTop: "4px" }}
               >
-                <option value="simple">Simple</option>
-                <option value="corporate">Corporate</option>
+                <option value="Corporate">Corporate</option>
+                <option value="Simple">Simple</option>
+                <option value="Minimal">Minimal</option>
               </select>
             </label>
             
             <label>
               Notes:
               <textarea 
-                value={footer.notes || ""} 
-                onChange={e => setFooter({ notes: e.target.value })}
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                onBlur={() => setInvoiceFooter({ notes })}
                 placeholder="Additional notes or terms..."
-                rows={3}
+                rows={4}
                 style={{ width: "100%", padding: "4px", marginTop: "4px" }}
               />
             </label>
@@ -421,8 +440,10 @@ export default function ThemeSettingsPanel() {
             <label>
               Contact Info:
               <input 
-                value={footer.contact || ""} 
-                onChange={e => setFooter({ contact: e.target.value })}
+                type="text"
+                value={contact}
+                onChange={e => setContact(e.target.value)}
+                onBlur={() => setInvoiceFooter({ contactInfo: contact })}
                 placeholder="www.company.com | +1-555-123-4567"
                 style={{ width: "100%", padding: "4px", marginTop: "4px" }}
               />
@@ -431,48 +452,48 @@ export default function ThemeSettingsPanel() {
             <label>
               Social Media:
               <input 
-                value={footer.socialsCsv || ""} 
-                onChange={e => setFooter({ socialsCsv: e.target.value })}
+                type="text"
+                value={social}
+                onChange={e => setSocial(e.target.value)}
+                onBlur={() => setInvoiceFooter({ social })}
                 placeholder="Instagram @handle, YouTube @channel"
                 style={{ width: "100%", padding: "4px", marginTop: "4px" }}
               />
             </label>
             
-            {footer.layout === "corporate" && (
-              <label>
-                Legal Text:
-                <textarea 
-                  value={footer.legal || ""} 
-                  onChange={e => setFooter({ legal: e.target.value })}
-                  placeholder="Legal disclaimers, terms, etc..."
-                  rows={2}
-                  style={{ width: "100%", padding: "4px", marginTop: "4px" }}
-                />
-              </label>
-            )}
+            <label>
+              Legal Text:
+              <textarea 
+                value={legal}
+                onChange={e => setLegal(e.target.value)}
+                onBlur={() => setInvoiceFooter({ legal })}
+                placeholder="Legal disclaimers, terms, etc..."
+                rows={3}
+                style={{ width: "100%", padding: "4px", marginTop: "4px" }}
+              />
+            </label>
             
             <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input 
                   type="checkbox" 
-                  defaultChecked={!!footer.colorBarOn}
-                  onChange={e => setFooter({ colorBarOn: e.target.checked })}
+                  defaultChecked={!!invoiceFooter?.colorBarOn}
+                  onChange={e => setInvoiceFooter({ colorBarOn: e.target.checked })}
                 />
                 <span>Color Bar</span>
               </label>
-              {footer.colorBarOn && (
-                <label>
-                  Height (px):
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max="20" 
-                    value={footer.colorBarHeightPx || 4} 
-                    onChange={e => setFooter({ colorBarHeightPx: parseInt(e.target.value) })}
-                    style={{ width: "60px", padding: "4px", marginLeft: "8px" }}
-                  />
-                </label>
-              )}
+              <label>
+                Height (px):
+                <input 
+                  type="number" 
+                  min={0}
+                  max={64}
+                  value={height}
+                  onChange={e => setHeight(Number(e.target.value))}
+                  onBlur={() => setInvoiceFooter({ colorBarHeight: Number(height) })}
+                  style={{ width: "72px", padding: "4px", marginLeft: "8px" }}
+                />
+              </label>
             </div>
           </div>
         </section>
