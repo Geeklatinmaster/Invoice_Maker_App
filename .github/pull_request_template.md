@@ -1,22 +1,69 @@
-## Summary
-- Implement robust regenerate flow (idempotent) and auto totals recompute.
+# Pull Request
 
-## Changes
-- Canonical store: @/features/invoice/store/useInvoice
-- Actions: regenerateCode(), compute(), setDocType(), patchInvoice()
-- Auto compute on: add/update/remove item, discount, tax, retention, regenerate, docType change
-- UI: "Regenerar" button (idempotent), removed manual "Recalcular", added View Totals (debug)
+> **Title:** usa prefix convencional (feat|fix|docs|perf|refactor|chore): descripción breve  
+> **Ej.:** feat: Live Customizer (MUI) + templates 95% + socials + docType + print parity
 
-## QA Checklist
-- [ ] Typecheck passes: `npm run typecheck`
-- [ ] Dev boots locally (Vite) with no runtime errors
-- [ ] DocType toggle (INVOICE ↔ QUOTE) updates code with prefixes INV-/QTE-
-- [ ] Clicking **Regenerar** multiple times is idempotent (no flicker/duplicates)
-- [ ] Items add/update/remove recompute totals automatically
-- [ ] Global discount/tax/retention recompute totals automatically
-- [ ] All imports point to `@/features/invoice/store/useInvoice`
-- [ ] No duplicate `useInvoice.*` files under `src/**`
+## Resumen / Summary
+- ¿Qué cambia y por qué? 1–3 bullets claros.
 
-## Notes
-- Keep named export: `export const useInvoice = ...`
-- Alias @ configured in tsconfig + Vite
+## Tipo de cambio / Type of change
+- [ ] feat (nueva función)
+- [ ] fix (bug)
+- [ ] docs (documentación)
+- [ ] perf (rendimiento)
+- [ ] refactor (sin cambios funcionales)
+- [ ] chore (infra/tareas internas)
+- [ ] breaking change
+
+## Alcance / Scope (áreas tocadas)
+- [ ] Live Customizer (MUI)
+- [ ] Templates / Preview
+- [ ] Social Footer
+- [ ] Print / PDF
+- [ ] Theme / Tokens / Bridge
+- [ ] Store / Zustand
+- [ ] Docs / CI
+
+## Cambios clave / Key changes
+- Bullet points de los cambios relevantes (máx 6).
+
+## Cómo probar / How to test
+1) Pasos para reproducir el escenario principal  
+2) Datos de ejemplo  
+3) Resultado esperado
+
+## Capturas / Screenshots or GIFs (UI **obligatorio**)
+> Adjunta 2–3: Panel, Preview, Print
+
+---
+
+## QA Checklist (marcar todo antes de pedir review)
+- [ ] Customizer controla **todos** los estilos (Invoice Form sin personalización)
+- [ ] DocType: `Quote` oculta Payment Info; `Invoice` lo muestra
+- [ ] Ítems: **descripción**, **unit price**, **qty**, **line total** en los 7 templates
+- [ ] Social Footer: CRUD + MUI allowlist + SVG sanitizado (≤200KB)
+- [ ] **Print = Preview** (Chrome/Safari/Firefox)
+- [ ] Tema persiste **por perfil** tras refresh
+- [ ] Build sin arrastrar todo `@mui/icons-material`
+- [ ] No `dangerouslySetInnerHTML` de SVG sin DOMPurify
+
+## Seguridad & Performance / Security & Performance
+- [ ] SVG sanitizado con DOMPurify (FORBID_TAGS/ATTR)
+- [ ] Iconos MUI con **imports estáticos** (allowlist)
+- [ ] No secretos en código / logs
+- [ ] Tamaño de bundle revisado (opcional `source-map-explorer`)
+
+## Compatibilidad / Compatibility
+- [ ] Sin breaking changes **o** documentados
+- [ ] Sin migraciones de datos **o** documentadas
+
+## Documentación / Docs
+- [ ] README actualizado (ES/EN) si aplica
+- [ ] CHANGELOG actualizado si aplica
+- [ ] Screenshots en `docs/images/` si aplica
+
+## Issues vinculados / Linked issues
+Closes #___  (o) Relates to #___
+
+## Notas de release / Release notes
+- Una línea clara para el changelog.
