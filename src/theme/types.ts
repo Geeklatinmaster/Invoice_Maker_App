@@ -11,7 +11,12 @@ export type ThemeTokens = {
   radius: number; borderWidth: number;
   stripe: boolean; stripeOpacity: number;
   logoMaxH: number; tableRowH: number; spacing: number;
-  brandIcon: string; customIconSvg?: string;
+  bodySize: number; titleSize: number; smallSize: number;
+  marginTop: number; marginRight: number; marginBottom: number; marginLeft: number;
+  rowHeight: number; cellPadding: number;
+  headerGradient: boolean;
+  headerGradStart: string; headerGradEnd: string;
+  brandIcon?: string; customIconSvg?: string;
 };
 
 export type TemplateId =

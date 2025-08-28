@@ -12,6 +12,55 @@ export default function CustomizerPanelMUI(){
   const docType = s.invoice.docType ?? "INVOICE";
   const setDocType = (v:"INVOICE"|"QUOTE") => s.updateInvoice?.({ docType: v });
 
+  // Optimized handlers to prevent unnecessary updates
+  const handleLogoMaxH = (_: any, v: number | number[]) => {
+    const size = Number(v);
+    if (size !== tokens.logoMaxH) {
+      setTokens({ logoMaxH: size });
+    }
+  };
+
+  const handleBorderWidth = (_: any, v: number | number[]) => {
+    const width = Number(v);
+    if (width !== tokens.borderWidth) {
+      setTokens({ borderWidth: width });
+    }
+  };
+
+  const handleRadius = (_: any, v: number | number[]) => {
+    const radius = Number(v);
+    if (radius !== tokens.radius) {
+      setTokens({ radius: radius });
+    }
+  };
+
+  const handleHeadingWeight = (_: any, v: number | number[]) => {
+    const weight = Number(v);
+    if (weight !== tokens.headingWeight) {
+      setTokens({ headingWeight: weight });
+    }
+  };
+
+  const handleColorChange = (key: keyof typeof tokens) => (color: string) => {
+    if (color !== tokens[key]) {
+      setTokens({ [key]: color });
+    }
+  };
+
+  const handleFontChange = (key: 'bodyFont' | 'headingFont') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const font = e.target.value;
+    if (font !== tokens[key]) {
+      setTokens({ [key]: font });
+    }
+  };
+
+  const handleStripeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const stripe = e.target.checked;
+    if (stripe !== tokens.stripe) {
+      setTokens({ stripe: stripe });
+    }
+  };
+
   return (
     <Paper variant="outlined" sx={{ p:2, borderRadius:3, maxWidth: 420, width:'100%' }}>
       <Typography variant="h6">🎨 Live Customizer (Instant Updates)</Typography>
@@ -34,7 +83,7 @@ export default function CustomizerPanelMUI(){
         </Stack>
         <Field label={`Size (${tokens.logoMaxH}px)`}>
           <Slider min={24} max={120} value={tokens.logoMaxH}
-            onChange={(_,v)=>setTokens({ logoMaxH: Number(v) })}/>
+            onChange={handleLogoMaxH}/>
         </Field>
       </Section>
 
@@ -53,25 +102,25 @@ export default function CustomizerPanelMUI(){
       {/* Colors */}
       <Section title="Colors">
         <ColorField label="Primary (Accent)" value={tokens.accent}
-          onChange={(c)=>setTokens({accent:c})}/>
+          onChange={handleColorChange('accent')}/>
         <ColorField label="Text" value={tokens.text}
-          onChange={(c)=>setTokens({text:c})}/>
+          onChange={handleColorChange('text')}/>
         <ColorField label="Surface" value={tokens.surface}
-          onChange={(c)=>setTokens({surface:c})}/>
+          onChange={handleColorChange('surface')}/>
         <ColorField label="Border" value={tokens.border}
-          onChange={(c)=>setTokens({border:c})}/>
+          onChange={handleColorChange('border')}/>
       </Section>
 
       {/* Typography */}
       <Section title="Typography">
         <TextField size="small" label="Font Family (Body)" value={tokens.bodyFont}
-          onChange={(e)=>setTokens({bodyFont: e.target.value})} />
+          onChange={handleFontChange('bodyFont')} />
         <TextField size="small" label="Font Family (Heading)" value={tokens.headingFont}
-          onChange={(e)=>setTokens({headingFont: e.target.value})} />
+          onChange={handleFontChange('headingFont')} />
         <Field label={`Title Weight (${tokens.headingWeight})`}>
           <Slider min={600} max={900} step={50}
             value={tokens.headingWeight}
-            onChange={(_,v)=>setTokens({headingWeight:Number(v)})}/>
+            onChange={handleHeadingWeight}/>
         </Field>
       </Section>
 
@@ -79,15 +128,15 @@ export default function CustomizerPanelMUI(){
       <Section title="Layout">
         <Field label={`Border width (${tokens.borderWidth}px)`}>
           <Slider min={0} max={6} value={tokens.borderWidth}
-            onChange={(_,v)=>setTokens({borderWidth:Number(v)})}/>
+            onChange={handleBorderWidth}/>
         </Field>
         <Field label={`Radius (${tokens.radius}px)`}>
           <Slider min={0} max={24} value={tokens.radius}
-            onChange={(_,v)=>setTokens({radius:Number(v)})}/>
+            onChange={handleRadius}/>
         </Field>
         <Stack direction="row" spacing={2} alignItems="center">
           <Typography>Zebra rows</Typography>
-          <Switch checked={tokens.stripe} onChange={(e)=>setTokens({stripe:e.target.checked})}/>
+          <Switch checked={tokens.stripe} onChange={handleStripeChange}/>
         </Stack>
       </Section>
 
@@ -102,6 +151,70 @@ export default function CustomizerPanelMUI(){
             <MenuItem value="redRibbon">Red Ribbon 95%</MenuItem>
             <MenuItem value="orangeCut">Orange Cut 95%</MenuItem>
             <MenuItem value="yellowArc">Yellow Arc 95%</MenuItem>
+          </Select>
+        </FormControl>
+      </Section>
+
+      {/* Typography Extended */}
+      <Section title="Typography Extended">
+        <Field label={`Body Size (${tokens.bodySize}px)`}>
+          <Slider min={10} max={18} value={tokens.bodySize} onChange={(_,v)=>setTokens({bodySize:Number(v)})}/>
+        </Field>
+        <Field label={`Title Size (${tokens.titleSize}px)`}>
+          <Slider min={18} max={36} value={tokens.titleSize} onChange={(_,v)=>setTokens({titleSize:Number(v)})}/>
+        </Field>
+        <Field label={`Small Size (${tokens.smallSize}px)`}>
+          <Slider min={10} max={16} value={tokens.smallSize} onChange={(_,v)=>setTokens({smallSize:Number(v)})}/>
+        </Field>
+      </Section>
+
+      {/* Margins */}
+      <Section title="Margins">
+        <Field label={`Top (${tokens.marginTop}px)`}>
+          <Slider min={0} max={60} value={tokens.marginTop} onChange={(_,v)=>setTokens({marginTop:Number(v)})}/>
+        </Field>
+        <Field label={`Right (${tokens.marginRight}px)`}>
+          <Slider min={0} max={60} value={tokens.marginRight} onChange={(_,v)=>setTokens({marginRight:Number(v)})}/>
+        </Field>
+        <Field label={`Bottom (${tokens.marginBottom}px)`}>
+          <Slider min={0} max={60} value={tokens.marginBottom} onChange={(_,v)=>setTokens({marginBottom:Number(v)})}/>
+        </Field>
+        <Field label={`Left (${tokens.marginLeft}px)`}>
+          <Slider min={0} max={60} value={tokens.marginLeft} onChange={(_,v)=>setTokens({marginLeft:Number(v)})}/>
+        </Field>
+      </Section>
+
+      {/* Table */}
+      <Section title="Table">
+        <Field label={`Row Height (${tokens.rowHeight}px)`}>
+          <Slider min={36} max={64} value={tokens.rowHeight} onChange={(_,v)=>setTokens({rowHeight:Number(v)})}/>
+        </Field>
+        <Field label={`Cell Padding (${tokens.cellPadding}px)`}>
+          <Slider min={6} max={18} value={tokens.cellPadding} onChange={(_,v)=>setTokens({cellPadding:Number(v)})}/>
+        </Field>
+      </Section>
+
+      {/* Header */}
+      <Section title="Header">
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Typography>Gradient</Typography>
+          <Switch checked={tokens.headerGradient} onChange={e=>setTokens({headerGradient:e.target.checked})}/>
+        </Stack>
+        <ColorField label="Gradient A" value={tokens.headerGradStart} onChange={(v)=>setTokens({headerGradStart:v})}/>
+        <ColorField label="Gradient B" value={tokens.headerGradEnd} onChange={(v)=>setTokens({headerGradEnd:v})}/>
+      </Section>
+
+      {/* Footer */}
+      <Section title="Footer">
+        <FormControl fullWidth size="small">
+          <InputLabel id="footer-mode">Mode</InputLabel>
+          <Select labelId="footer-mode" label="Mode"
+            value={s.invoice.footer?.mode || 'social'}
+            onChange={(e)=>s.updateInvoice?.({ footer:{ ...(s.invoice.footer||{}), mode:e.target.value as any }})}>
+            <MenuItem value="none">None</MenuItem>
+            <MenuItem value="minimal">Minimal</MenuItem>
+            <MenuItem value="brand">Brand</MenuItem>
+            <MenuItem value="social">Social</MenuItem>
           </Select>
         </FormControl>
       </Section>

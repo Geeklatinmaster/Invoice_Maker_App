@@ -154,14 +154,26 @@ const createDefaultInvoice = (): Invoice => ({
   docType: "INVOICE",
   code: makeCode("INVOICE"),
   issueDate: new Date().toISOString().split("T")[0],
-  customerName: "",
-  customerEmail: "",
-  customerAddress: "",
+  
+  // Structured defaults
+  brand: { name: 'My Business', email:'', phone:'', address:'', tagline:'' },
+  client: { name:'', email:'', address:'' },
+  meta: { number: '', date: new Date().toISOString().slice(0,10) },
+  footer: { mode: 'brand', showTerms: true },
+  settings: { locale: 'en-US', currency: 'USD', decimals: 2 },
+  
   items: [],
+  terms: 'Payment is due within 30 days of invoice date.',
   globalDiscount: 0,
   globalTaxRate: 0,
   retentionPreset: "NONE",
   footerId: "v1-minimal",
+  socials: [],  // Always array
+  
+  // Legacy support
+  customerName: "",
+  customerEmail: "",
+  customerAddress: "",
 });
 
 const createDefaultTotals = (): Totals => ({
@@ -212,11 +224,29 @@ export const useInvoice = create<InvoiceStore>()(
   },
   
   updateProfile: (id: string, updates: Partial<Profile>) => {
-    set(state => ({
-      profiles: state.profiles.map(p => 
-        p.id === id ? { ...p, ...updates } : p
-      ),
-    }));
+    set(state => {
+      const idx = state.profiles.findIndex(p => p.id === id);
+      if (idx === -1) return state; // profile not found, no changes
+      
+      const current = state.profiles[idx];
+      const next = { ...current, ...updates };
+
+      // evita escribir si theme no cambió (major optimization)
+      if (updates.theme) {
+        const curTheme = JSON.stringify(current.theme ?? {});
+        const nextTheme = JSON.stringify(next.theme ?? {});
+        if (curTheme === nextTheme) return state; // no-op
+      }
+
+      // check if anything actually changed
+      const currentStr = JSON.stringify(current);
+      const nextStr = JSON.stringify(next);
+      if (currentStr === nextStr) return state; // no-op
+
+      const profiles = state.profiles.slice();
+      profiles[idx] = next;
+      return { profiles };
+    });
   },
   
   deleteProfile: (id: string) => {
@@ -614,7 +644,7 @@ export const useInvoice = create<InvoiceStore>()(
     set(state => ({
       invoice: {
         ...state.invoice,
-        socials: [...(state.invoice.socials ?? []), link]
+        socials: [...state.invoice.socials, link]  // 👈 sin ?? [] - array siempre existe
       }
     }));
   },
@@ -623,7 +653,7 @@ export const useInvoice = create<InvoiceStore>()(
     set(state => ({
       invoice: {
         ...state.invoice,
-        socials: (state.invoice.socials ?? []).map(s =>
+        socials: state.invoice.socials.map(s =>
           s.id === id ? { ...s, ...patch } : s
         )
       }
@@ -634,15 +664,31 @@ export const useInvoice = create<InvoiceStore>()(
     set(state => ({
       invoice: {
         ...state.invoice,
-        socials: (state.invoice.socials ?? []).filter(s => s.id !== id)
+        socials: state.invoice.socials.filter(s => s.id !== id)
       }
     }));
   },
 
-  updateInvoice: (updates: Partial<Invoice>) => {
-    set(state => ({
-      invoice: { ...state.invoice, ...updates }
-    }));
+  updateInvoice: (patch: Partial<Invoice>) => {
+    set((state) => {
+      const cur = state.invoice;
+      const next: Invoice = {
+        ...cur,
+        ...patch,
+        // Deep-merge structured fields to prevent data loss
+        brand: { ...cur.brand, ...(patch.brand || {}) },
+        client: { ...cur.client, ...(patch.client || {}) },
+        footer: { ...cur.footer, ...(patch.footer || {}) },
+        settings: { ...cur.settings, ...(patch.settings || {}) },
+        meta: { ...cur.meta, ...(patch.meta || {}) },
+        socials: patch.socials !== undefined ? patch.socials : cur.socials,
+      };
+      
+      // No-op if identical (prevent unnecessary renders)
+      if (JSON.stringify(next) === JSON.stringify(cur)) return state;
+      
+      return { invoice: next };
+    });
     // Auto-recompute totals after invoice update
     get().compute();
   },

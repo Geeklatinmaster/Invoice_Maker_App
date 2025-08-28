@@ -1,5 +1,16 @@
 import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
 import type { ThemeState, ThemeTokens, TemplateId, IconSpec } from "./types";
+
+function shallowEqual<T extends object>(a?: Partial<T>, b?: Partial<T>) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const ak = Object.keys(a) as (keyof T)[];
+  const bk = Object.keys(b) as (keyof T)[];
+  if (ak.length !== bk.length) return false;
+  for (const k of ak) if (a[k] !== b[k]) return false;
+  return true;
+}
 
 const defaults: ThemeTokens = {
   accent:"#04A7A3", accent2:"#027e7b",
@@ -10,32 +21,20 @@ const defaults: ThemeTokens = {
   radius:12, borderWidth:1,
   stripe:true, stripeOpacity:0.45,
   logoMaxH:56, tableRowH:44, spacing:12,
-  brandIcon: "FileText", customIconSvg: undefined
+  bodySize: 14, titleSize: 24, smallSize: 12,
+  marginTop: 20, marginRight: 20, marginBottom: 25, marginLeft: 20,
+  rowHeight: 44, cellPadding: 10,
+  headerGradient: true,
+  headerGradStart: '#0f0fa9', headerGradEnd: '#02a7a3'
 };
 
-export const useTheme = create<ThemeState & {
+type Store = ThemeState & {
   setTemplate:(t:TemplateId)=>void;
   setTokens:(p:Partial<ThemeTokens>)=>void;
   setIcon:(slot: keyof ThemeState["icons"], v: IconSpec)=>void;
-  // Individual setters for CustomizerPanel
-  setAccent: (v: string) => void;
-  setAccent2: (v: string) => void;
-  setText: (v: string) => void;
-  setTextMuted: (v: string) => void;
-  setBg: (v: string) => void;
-  setSurface: (v: string) => void;
-  setBorder: (v: string) => void;
-  setHeadingFont: (v: string) => void;
-  setBodyFont: (v: string) => void;
-  setRadius: (v: number) => void;
-  setBorderWidth: (v: number) => void;
-  setStripe: (v: boolean) => void;
-  setStripeOpacity: (v: number) => void;
-  setLogoMaxH: (v: number) => void;
-  setTableRowH: (v: number) => void;
-  setSpacing: (v: number) => void;
-  setBrandIcon: (iconName: string, customSvg?: string) => void;
-}>(set=>({
+};
+
+export const useTheme = create(subscribeWithSelector<Store>((set, get)=>({
   template:"modernTeal",
   tokens: defaults,
   icons:{
@@ -46,31 +45,22 @@ export const useTheme = create<ThemeState & {
     whatsapp:{type:"library",pack:"lucide",name:"MessageCircle"},
     website:{type:"library",pack:"lucide",name:"Globe"}
   },
-  setTemplate:(t)=>set({template:t}),
-  setTokens:(p)=>set(s=>({tokens:{...s.tokens,...p}})),
-  setIcon:(slot,v)=>set(s=>({icons:{...s.icons,[slot]:v}})),
-  // Individual setters
-  setAccent: (v) => set(s => ({ tokens: { ...s.tokens, accent: v } })),
-  setAccent2: (v) => set(s => ({ tokens: { ...s.tokens, accent2: v } })),
-  setText: (v) => set(s => ({ tokens: { ...s.tokens, text: v } })),
-  setTextMuted: (v) => set(s => ({ tokens: { ...s.tokens, textMuted: v } })),
-  setBg: (v) => set(s => ({ tokens: { ...s.tokens, bg: v } })),
-  setSurface: (v) => set(s => ({ tokens: { ...s.tokens, surface: v } })),
-  setBorder: (v) => set(s => ({ tokens: { ...s.tokens, border: v } })),
-  setHeadingFont: (v) => set(s => ({ tokens: { ...s.tokens, headingFont: v } })),
-  setBodyFont: (v) => set(s => ({ tokens: { ...s.tokens, bodyFont: v } })),
-  setRadius: (v) => set(s => ({ tokens: { ...s.tokens, radius: v } })),
-  setBorderWidth: (v) => set(s => ({ tokens: { ...s.tokens, borderWidth: v } })),
-  setStripe: (v) => set(s => ({ tokens: { ...s.tokens, stripe: v } })),
-  setStripeOpacity: (v) => set(s => ({ tokens: { ...s.tokens, stripeOpacity: v } })),
-  setLogoMaxH: (v) => set(s => ({ tokens: { ...s.tokens, logoMaxH: v } })),
-  setTableRowH: (v) => set(s => ({ tokens: { ...s.tokens, tableRowH: v } })),
-  setSpacing: (v) => set(s => ({ tokens: { ...s.tokens, spacing: v } })),
-  setBrandIcon: (iconName, customSvg) => set(s => ({ 
-    tokens: { 
-      ...s.tokens, 
-      brandIcon: iconName,
-      ...(customSvg && { customIconSvg: customSvg })
-    } 
-  })),
-}));
+
+  setTemplate:(t)=> {
+    if (get().template === t) return;            // <- no-op si igual
+    set({ template: t });
+  },
+
+  setTokens:(p)=> {
+    const next = { ...get().tokens, ...p };
+    if (shallowEqual<ThemeTokens>(next, get().tokens)) return; // <- no-op si igual
+    set({ tokens: next });
+  },
+
+  setIcon:(slot,v)=>{
+    const cur = get().icons as any;
+    const same = JSON.stringify(cur[slot]) === JSON.stringify(v);
+    if (same) return;                             // <- no-op si igual
+    set({ icons: { ...get().icons, [slot]: v } });
+  }
+})));

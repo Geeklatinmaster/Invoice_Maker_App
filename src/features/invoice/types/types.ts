@@ -91,21 +91,56 @@ export type SocialLink = {
       | { type:'custom'; svg:string };
 };
 
+// Enhanced types for consistent structure
+export type Brand = { 
+  name?: string; 
+  ein?: string; 
+  email?: string; 
+  phone?: string; 
+  address?: string;
+  logoUrl?: string;
+};
+
+export type Client = { 
+  name?: string; 
+  email?: string; 
+  address?: string; 
+};
+
+export type FooterMode = 'none'|'minimal'|'brand'|'social';
+
+export type Footer = { 
+  mode?: FooterMode; 
+  showTerms?: boolean; 
+};
+
+export type Settings = { 
+  locale: string; 
+  currency: string; 
+  decimals: number; 
+};
+
 export type Invoice = {
   docType: DocType;       // INVOICE/QUOTE
   code: string;           // autogenerado
   issueDate: string;      // ISO yyyy-mm-dd
-  customerName: string;
-  customerEmail?: string;
-  customerAddress?: string;
+  
+  // Structured data with consistent defaults
+  brand: Brand;
+  client: Client;
+  footer: Footer;
+  settings: Settings;
+  
   items: InvoiceItem[];
+  terms?: string;
   globalDiscount?: number;  // % global
   globalTaxRate?: number;   // % si se usa global
   retentionPreset: RetentionPreset;
   footerId: FooterId;
-  footer?: import('../store/useInvoice').FooterData;
-  socials?: SocialLink[];  // Social media links
-  brand?: {
-    logoUrl?: string;
-  };
+  socials: SocialLink[];  // Always array, never undefined
+  
+  // Legacy support - will be migrated
+  customerName?: string;
+  customerEmail?: string;
+  customerAddress?: string;
 };

@@ -13,6 +13,14 @@ export default function ThemeVars(){
         --r:${t.radius}px; --bw:${t.borderWidth}px;
         --stripe:${t.stripe ? 1 : 0}; --stripeOp:${t.stripeOpacity};
         --logoH:${t.logoMaxH}px; --rowH:${t.tableRowH}px; --sp:${t.spacing}px;
+        --body-size: ${t.bodySize}px;
+        --title-size: ${t.titleSize}px;
+        --small-size: ${t.smallSize}px;
+        --m-top:${t.marginTop}px; --m-right:${t.marginRight}px; --m-bottom:${t.marginBottom}px; --m-left:${t.marginLeft}px;
+        --row-h:${t.rowHeight}px; --cell-pad:${t.cellPadding}px;
+        --stripe-op:${t.stripeOpacity};
+        --grad-on:${t.headerGradient ? 1 : 0};
+        --grad-a:${t.headerGradStart}; --grad-b:${t.headerGradEnd};
       }
       @media print {
         * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

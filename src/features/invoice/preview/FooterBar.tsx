@@ -1,10 +1,15 @@
+import { memo } from "react";
 import { useInvoice } from "../store/useInvoice";
-import { MuiIcon } from "../../../ui/icons/allowlist";
+import { shallow } from "zustand/shallow";
+import { MuiIcon, IconName } from "../../../ui/icons/allowlist";
+
+// Constante compartida para evitar crear arrays nuevos
+const EMPTY: ReadonlyArray<any> = Object.freeze([]);
 
 function Icon({ s }: { s: any }) {
   const size = 16;
   if (s.icon?.type === 'mui') {
-    return <MuiIcon name={s.icon.name} size={size} />;
+    return <MuiIcon name={s.icon.name as IconName} size={size} />;
   }
   if (s.icon?.type === 'custom') {
     return <span 
@@ -15,8 +20,9 @@ function Icon({ s }: { s: any }) {
   return null;
 }
 
-export default function FooterBar() {
-  const socials = useInvoice(s => s.invoice.socials ?? []);
+function FooterBarImpl() {
+  // Selector estable (sin crear arrays/objetos nuevos)
+  const socials = useInvoice(s => s.invoice.socials || EMPTY, shallow);
   
   if (socials.length === 0) return null;
   
@@ -44,3 +50,6 @@ export default function FooterBar() {
     </div>
   );
 }
+
+const FooterBar = memo(FooterBarImpl); // 👈 evita renders innecesarios
+export default FooterBar;

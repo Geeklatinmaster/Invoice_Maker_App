@@ -8,7 +8,8 @@ import OrangeCut from "./templates/OrangeCut";
 import YellowArc from "./templates/YellowArc";
 
 export default function TemplateRenderer(){
-  switch (useTheme.getState().template){
+  const tpl = useTheme(s=>s.template); // 👈 reactivo
+  switch (tpl){
     case "modernTeal": return <ModernTeal/>;
     case "navyWave":  return <NavyWave/>;
     case "redBadge":  return <RedBadge/>;
