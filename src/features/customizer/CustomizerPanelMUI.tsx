@@ -1,5 +1,5 @@
 import { useTheme } from "../../theme/useTheme";
-import { useInvoice } from "../invoice/store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 import { Box, Paper, Stack, Typography, Slider, Select, MenuItem, TextField,
   Switch, InputLabel, FormControl, Divider, Button, IconButton } from "@mui/material";
 import UploadIcon from "@mui/icons-material/Upload";

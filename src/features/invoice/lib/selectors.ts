@@ -1,4 +1,4 @@
-import { useInvoice } from "../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 import type { Lang } from "./i18n";
 
 export const useLang = (): Lang => {

@@ -225,10 +225,10 @@ export default function Preview() {
               </td>
               <td style={{...tdStyles, textAlign: "center"}}>{item.qty}</td>
               <td style={{...tdStyles, textAlign: "center"}}>
-                {fmtCurrency(item.unitPrice, currentProfile?.currency || "USD", currentProfile?.locale || "en-US")}
+                {fmtCurrency(item.unitPrice, currentProfile?.locale || "en-US", currentProfile?.currency || "USD")}
               </td>
               <td style={{...tdStyles, textAlign: "right"}}>
-                {fmtCurrency(item.qty * item.unitPrice, currentProfile?.currency || "USD", currentProfile?.locale || "en-US")}
+                {fmtCurrency(item.qty * item.unitPrice, currentProfile?.locale || "en-US", currentProfile?.currency || "USD")}
               </td>
             </tr>
           ))}
@@ -240,24 +240,24 @@ export default function Preview() {
         <div style={{ display: "inline-block", textAlign: "left", minWidth: "200px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0" }}>
             <span>Subtotal:</span>
-            <span>{fmtCurrency(totals.subtotal, currentProfile?.currency || "USD", currentProfile?.locale || "en-US")}</span>
+            <span>{fmtCurrency(totals.subtotal, currentProfile?.locale || "en-US", currentProfile?.currency || "USD")}</span>
           </div>
           {totals.discount > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0" }}>
               <span>Discount:</span>
-              <span>-{fmtCurrency(totals.discount, currentProfile?.currency || "USD", currentProfile?.locale || "en-US")}</span>
+              <span>-{fmtCurrency(totals.discount, currentProfile?.locale || "en-US", currentProfile?.currency || "USD")}</span>
             </div>
           )}
           {totals.tax > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0" }}>
               <span>Tax:</span>
-              <span>{fmtCurrency(totals.tax, currentProfile?.currency || "USD", currentProfile?.locale || "en-US")}</span>
+              <span>{fmtCurrency(totals.tax, currentProfile?.locale || "en-US", currentProfile?.currency || "USD")}</span>
             </div>
           )}
           {totals.retention > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0" }}>
               <span>Retention:</span>
-              <span>-{fmtCurrency(totals.retention, currentProfile?.currency || "USD", currentProfile?.locale || "en-US")}</span>
+              <span>-{fmtCurrency(totals.retention, currentProfile?.locale || "en-US", currentProfile?.currency || "USD")}</span>
             </div>
           )}
           <div className="invoice-total-row" style={{ 
@@ -270,7 +270,7 @@ export default function Preview() {
             fontSize: `${themeSettings.baseFontPx + 2}px`
           }}>
             <span>Total:</span>
-            <span>{fmtCurrency(totals.total, currentProfile?.currency || "USD", currentProfile?.locale || "en-US")}</span>
+            <span>{fmtCurrency(totals.total, currentProfile?.locale || "en-US", currentProfile?.currency || "USD")}</span>
           </div>
         </div>
       </div>

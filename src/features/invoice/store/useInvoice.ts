@@ -136,6 +136,14 @@ type InvoiceStore = {
   removeSocial: (id: string) => void;
   updateInvoice: (updates: Partial<Invoice>) => void;
   
+  // Specific immutable field actions
+  updateBrandField: (key: string, value: any) => void;
+  updateClientField: (key: string, value: any) => void;
+  updateSettingsField: (key: string, value: any) => void;
+  updateMetaField: (key: string, value: any) => void;
+  updateFooterField: (key: string, value: any) => void;
+  setTerms: (terms: string) => void;
+  
   // Computation
   compute: () => void;
 };
@@ -690,6 +698,64 @@ export const useInvoice = create<InvoiceStore>()(
       return { invoice: next };
     });
     // Auto-recompute totals after invoice update
+    get().compute();
+  },
+
+  // Specific immutable field actions for optimized reactivity
+  updateBrandField: (key: string, value: any) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        brand: { ...(state.invoice.brand || {}), [key]: value }
+      }
+    }));
+    get().compute();
+  },
+
+  updateClientField: (key: string, value: any) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        client: { ...(state.invoice.client || {}), [key]: value }
+      }
+    }));
+    get().compute();
+  },
+
+  updateSettingsField: (key: string, value: any) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        settings: { ...(state.invoice.settings || {}), [key]: value }
+      }
+    }));
+    get().compute();
+  },
+
+  updateMetaField: (key: string, value: any) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        meta: { ...(state.invoice.meta || {}), [key]: value }
+      }
+    }));
+    get().compute();
+  },
+
+  updateFooterField: (key: string, value: any) => {
+    set(state => ({
+      invoice: {
+        ...state.invoice,
+        footer: { ...(state.invoice.footer || {}), [key]: value }
+      }
+    }));
+    get().compute();
+  },
+
+  setTerms: (terms: string) => {
+    set(state => ({
+      invoice: { ...state.invoice, terms }
+    }));
     get().compute();
   },
       }),

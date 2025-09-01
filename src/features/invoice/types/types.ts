@@ -99,6 +99,7 @@ export type Brand = {
   phone?: string; 
   address?: string;
   logoUrl?: string;
+  tagline?: string;
 };
 
 export type Client = { 
@@ -120,6 +121,11 @@ export type Settings = {
   decimals: number; 
 };
 
+export type Meta = {
+  number?: string;
+  date?: string;
+};
+
 export type Invoice = {
   docType: DocType;       // INVOICE/QUOTE
   code: string;           // autogenerado
@@ -130,6 +136,7 @@ export type Invoice = {
   client: Client;
   footer: Footer;
   settings: Settings;
+  meta: Meta;
   
   items: InvoiceItem[];
   terms?: string;

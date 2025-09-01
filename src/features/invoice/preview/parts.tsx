@@ -1,4 +1,4 @@
-import { useInvoice } from "../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 import { fmtCurrency } from "../lib/format";
 import FooterBar from "./FooterBar";
 
@@ -33,9 +33,9 @@ export function ItemsTable(){
               <div style={{fontWeight:600}}>{it.title}</div>
               {it.description && <div style={{opacity:.85, fontSize:12, marginTop:2}}>{it.description}</div>}
             </td>
-            <td style={tdR()}>{fmtCurrency(it.unitPrice, currency, locale)}</td>
+            <td style={tdR()}>{fmtCurrency(it.unitPrice, locale, currency)}</td>
             <td style={tdR()}>{it.qty}</td>
-            <td style={tdR()}>{fmtCurrency(it.unitPrice*it.qty, currency, locale)}</td>
+            <td style={tdR()}>{fmtCurrency(it.unitPrice*it.qty, locale, currency)}</td>
           </tr>
         ))}
       </tbody>
@@ -66,11 +66,11 @@ export function TotalsCard(){
   return (
     <div style={{background:"var(--surface)", border:`var(--bw) solid var(--border)`,
       borderRadius:"var(--r)", padding:"var(--sp)"}}>
-      <Row label="Sub Total" val={fmtCurrency(totals.subtotal, currency, locale)}/>
-      {totals.tax > 0 && <Row label="Tax" val={fmtCurrency(totals.tax, currency, locale)}/>}
-      {totals.discount > 0 && <Row label="Discount" val={`-${fmtCurrency(totals.discount, currency, locale)}`}/>}
-      {totals.retention > 0 && <Row label="Retention" val={`-${fmtCurrency(totals.retention, currency, locale)}`}/>}
-      <Row label="Grand Total" val={fmtCurrency(totals.total, currency, locale)} strong accent />
+      <Row label="Sub Total" val={fmtCurrency(totals.subtotal, locale, currency)}/>
+      {totals.tax > 0 && <Row label="Tax" val={fmtCurrency(totals.tax, locale, currency)}/>}
+      {totals.discount > 0 && <Row label="Discount" val={`-${fmtCurrency(totals.discount, locale, currency)}`}/>}
+      {totals.retention > 0 && <Row label="Retention" val={`-${fmtCurrency(totals.retention, locale, currency)}`}/>}
+      <Row label="Grand Total" val={fmtCurrency(totals.total, locale, currency)} strong accent />
     </div>
   );
 }

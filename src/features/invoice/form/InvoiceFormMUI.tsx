@@ -1,5 +1,5 @@
 import { Stack, TextField, Typography, Paper, Divider, FormControlLabel, Switch, MenuItem } from "@mui/material";
-import { useInvoice } from "../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 
 export default function InvoiceFormMUI(){
   const s = useInvoice();
@@ -12,13 +12,13 @@ export default function InvoiceFormMUI(){
         <Divider sx={{ my:1 }}/>
         <Stack spacing={1.25}>
           <TextField size="small" label="Business / Brand" value={iv.brand?.name || ''}
-            onChange={e=>s.updateInvoice?.({ brand:{ ...(iv.brand||{}), name:e.target.value }})}/>
+            onChange={e=>s.updateBrandField('name', e.target.value)}/>
           <TextField size="small" label="EIN/TIN" value={iv.brand?.ein || ''}
-            onChange={e=>s.updateInvoice?.({ brand:{ ...(iv.brand||{}), ein:e.target.value }})}/>
+            onChange={e=>s.updateBrandField('ein', e.target.value)}/>
           <TextField size="small" label="Email" value={iv.brand?.email || ''}
-            onChange={e=>s.updateInvoice?.({ brand:{ ...(iv.brand||{}), email:e.target.value }})}/>
+            onChange={e=>s.updateBrandField('email', e.target.value)}/>
           <TextField size="small" label="Phone" value={iv.brand?.phone || ''}
-            onChange={e=>s.updateInvoice?.({ brand:{ ...(iv.brand||{}), phone:e.target.value }})}/>
+            onChange={e=>s.updateBrandField('phone', e.target.value)}/>
         </Stack>
       </Paper>
 
@@ -27,11 +27,11 @@ export default function InvoiceFormMUI(){
         <Divider sx={{ my:1 }}/>
         <Stack spacing={1.25}>
           <TextField size="small" label="Client Name" value={iv.client?.name || ''}
-            onChange={e=>s.updateInvoice?.({ client:{ ...(iv.client||{}), name:e.target.value }})}/>
+            onChange={e=>s.updateClientField('name', e.target.value)}/>
           <TextField size="small" label="Email" value={iv.client?.email || ''}
-            onChange={e=>s.updateInvoice?.({ client:{ ...(iv.client||{}), email:e.target.value }})}/>
+            onChange={e=>s.updateClientField('email', e.target.value)}/>
           <TextField size="small" label="Address" value={iv.client?.address || ''}
-            onChange={e=>s.updateInvoice?.({ client:{ ...(iv.client||{}), address:e.target.value }})}/>
+            onChange={e=>s.updateClientField('address', e.target.value)}/>
         </Stack>
       </Paper>
 
@@ -40,7 +40,7 @@ export default function InvoiceFormMUI(){
         <Divider sx={{ my:1 }}/>
         <Stack spacing={1.25}>
           <TextField select size="small" label="Footer Style" value={iv.footer?.mode || 'social'}
-            onChange={e=>s.updateInvoice?.({ footer:{ mode:e.target.value as any }})}>
+            onChange={e=>s.updateFooterField('mode', e.target.value)}>
             <MenuItem value="none">None</MenuItem>
             <MenuItem value="minimal">Minimal</MenuItem>
             <MenuItem value="brand">Brand</MenuItem>
@@ -49,12 +49,12 @@ export default function InvoiceFormMUI(){
           <FormControlLabel
             control={
               <Switch checked={!!iv.footer?.showTerms}
-                onChange={e=>s.updateInvoice?.({ footer:{ showTerms: e.target.checked }})}/>
+                onChange={e=>s.updateFooterField('showTerms', e.target.checked)}/>
             }
             label="Show Terms & Conditions"
           />
           <TextField size="small" label="Terms" multiline minRows={3}
-            value={iv.terms || ''} onChange={e=>s.updateInvoice?.({ terms: e.target.value })}/>
+            value={iv.terms || ''} onChange={e=>s.setTerms(e.target.value)}/>
         </Stack>
       </Paper>
 
@@ -63,7 +63,7 @@ export default function InvoiceFormMUI(){
         <Divider sx={{ my:1 }}/>
         <Stack spacing={1.25}>
           <TextField select size="small" label="Locale" value={iv.settings?.locale || 'en-US'}
-            onChange={e=>s.updateInvoice?.({ settings: { locale: e.target.value }})}>
+            onChange={e=>s.updateSettingsField('locale', e.target.value)}>
             <MenuItem value="en-US">English (US)</MenuItem>
             <MenuItem value="es-ES">Español (España)</MenuItem>
             <MenuItem value="es-VE">Español (Venezuela)</MenuItem>
@@ -71,7 +71,7 @@ export default function InvoiceFormMUI(){
           </TextField>
 
           <TextField select size="small" label="Currency" value={iv.settings?.currency || 'USD'}
-            onChange={e=>s.updateInvoice?.({ settings: { currency: e.target.value }})}>
+            onChange={e=>s.updateSettingsField('currency', e.target.value)}>
             <MenuItem value="USD">USD — US Dollar</MenuItem>
             <MenuItem value="EUR">EUR — Euro</MenuItem>
             <MenuItem value="VES">VES — Bolívar</MenuItem>
@@ -81,7 +81,7 @@ export default function InvoiceFormMUI(){
 
           <TextField type="number" size="small" label="Decimals" inputProps={{ min:0, max:4 }}
             value={iv.settings?.decimals ?? 2}
-            onChange={e=>s.updateInvoice?.({ settings: { decimals: Math.max(0, Math.min(4, Number(e.target.value)||0)) }})}/>
+            onChange={e=>s.updateSettingsField('decimals', Math.max(0, Math.min(4, Number(e.target.value)||0)))}/>
         </Stack>
       </Paper>
 
@@ -89,9 +89,9 @@ export default function InvoiceFormMUI(){
         <Typography variant="subtitle1" fontWeight={700}>Header</Typography>
         <Divider sx={{ my:1 }}/>
         <Stack spacing={1.25}>
-          <TextField size="small" label="Tagline" value={iv.brand?.tagline || ''} onChange={e=>s.updateInvoice?.({ brand:{ ...(iv.brand||{}), tagline:e.target.value }})}/>
-          <TextField size="small" label="Document No." value={iv.meta?.number || ''} onChange={e=>s.updateInvoice?.({ meta:{ ...(iv.meta||{}), number:e.target.value }})}/>
-          <TextField size="small" label="Date (YYYY-MM-DD)" value={iv.meta?.date || ''} onChange={e=>s.updateInvoice?.({ meta:{ ...(iv.meta||{}), date:e.target.value }})}/>
+          <TextField size="small" label="Tagline" value={iv.brand?.tagline || ''} onChange={e=>s.updateBrandField('tagline', e.target.value)}/>
+          <TextField size="small" label="Document No." value={iv.meta?.number || ''} onChange={e=>s.updateMetaField('number', e.target.value)}/>
+          <TextField size="small" label="Date (YYYY-MM-DD)" value={iv.meta?.date || ''} onChange={e=>s.updateMetaField('date', e.target.value)}/>
         </Stack>
       </Paper>
     </Stack>

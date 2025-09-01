@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { formatMoney } from "../../lib/format";
-import { useInvoice } from "../../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 
 export default function Totals(){
   // Reactive selectors - only re-render when these specific values change

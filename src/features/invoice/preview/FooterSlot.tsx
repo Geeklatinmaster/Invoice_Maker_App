@@ -1,5 +1,5 @@
 import FooterBar from "./FooterBar";
-import { useInvoice } from "../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 
 export default function FooterSlot(){
   const mode = useInvoice(s=>s.invoice.footer?.mode || 'social');

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { useInvoice } from "../store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 import { shallow } from "zustand/shallow";
 import { MuiIcon, IconName } from "../../../ui/icons/allowlist";
 

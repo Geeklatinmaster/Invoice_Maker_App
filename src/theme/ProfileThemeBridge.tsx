@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useInvoice } from "../features/invoice/store/useInvoice";
+import { useInvoice } from "@/features/invoice/store/useInvoice";
 import { useTheme } from "./useTheme";
 import type { TemplateId, ThemeTokens } from "./types";
 

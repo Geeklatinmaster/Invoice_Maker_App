@@ -1,10 +1,12 @@
-import { useInvoice } from "../../store/useInvoice";
 import { ItemsTable, TotalsCard, FooterBar } from "../parts";
+import type { TemplateVM } from "./types";
 
-export default function YellowArc(){
-  const s = useInvoice();
-  const iv = s.invoice;
-  const profile = s.profiles.find(p=>p.id===s.selectedProfileId) ?? s.profiles[0];
+export default function YellowArc({ ctx }: { ctx: TemplateVM }){
+  
+  // Safety check - return early if context is not ready
+  if (!ctx || !ctx.client || !ctx.company || !ctx.doc) {
+    return <div>Loading...</div>;
+  }
   
   return (
     <section style={{background:"var(--bg)", color:"var(--txt)", fontFamily:"var(--body)",
@@ -14,17 +16,17 @@ export default function YellowArc(){
           background:"radial-gradient(circle at center, #ffd000, #ff9f00)", filter:"blur(8px)", opacity:.85}}/>
         <div style={{position:"relative", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
           <div style={{display:"flex", alignItems:"center", gap:"var(--sp)"}}>
-            {profile?.logo?.logoUrl && <img src={profile.logo.logoUrl} alt="logo" style={{height:"var(--logoH)"}}/>}
+            {ctx.company.logoUrl && <img src={ctx.company.logoUrl} alt="logo" style={{height:"var(--logoH)"}}/>}
             <div style={{textAlign:"left"}}>
-              <h1 style={{margin:0, fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>{iv.docType ?? "INVOICE"}</h1>
+              <h1 style={{margin:0, fontFamily:"var(--heading)", fontWeight:"var(--hW)"}}>{ctx.doc.type ?? "INVOICE"}</h1>
               <div style={{fontSize:"14px", color:"var(--txtMuted)"}}>
-                {profile?.businessName}
+                {ctx.company.name}
               </div>
             </div>
           </div>
           <div style={{textAlign:"right", background:"rgba(255,255,255,0.9)", padding:"var(--sp)", borderRadius:"var(--r)"}}>
-            <div><strong>No:</strong> {iv.code ?? "0001"}</div>
-            <div><strong>Date:</strong> {iv.issueDate ?? ""}</div>
+            <div><strong>No:</strong> {ctx.doc.code ?? "0001"}</div>
+            <div><strong>Date:</strong> {ctx.doc.dateISO ?? ""}</div>
           </div>
         </div>
       </div>
@@ -35,18 +37,18 @@ export default function YellowArc(){
             border:`var(--bw) solid var(--border)`, boxShadow:"0 2px 4px rgba(0,0,0,0.1)"}}>
             <strong style={{color:"var(--acc)"}}>Billed From:</strong><br/>
             <div style={{marginTop:8}}>
-              <strong>{profile?.businessName}</strong><br/>
-              {profile?.address}<br/>
-              <small>{profile?.email}</small>
+              <strong>{ctx.company.name}</strong><br/>
+              {ctx.company.address}<br/>
+              <small>{ctx.company.email}</small>
             </div>
           </div>
           <div style={{padding:"var(--sp)", background:"var(--surface)", borderRadius:"var(--r)", 
             border:`var(--bw) solid var(--border)`, boxShadow:"0 2px 4px rgba(0,0,0,0.1)"}}>
-            <strong style={{color:"var(--acc)"}}>{iv.docType === "QUOTE" ? "Quote To:" : "Billed To:"}</strong><br/>
+            <strong style={{color:"var(--acc)"}}>{ctx.doc.type === "QUOTE" ? "Quote To:" : "Billed To:"}</strong><br/>
             <div style={{marginTop:8}}>
-              <strong>{iv.customerName}</strong><br/>
-              {iv.customerAddress}<br/>
-              {iv.customerEmail && <small>{iv.customerEmail}</small>}
+              <strong>{ctx.client.name}</strong><br/>
+              {ctx.client.address}<br/>
+              {ctx.client.email && <small>{ctx.client.email}</small>}
             </div>
           </div>
         </div>
@@ -59,7 +61,7 @@ export default function YellowArc(){
             <div style={{margin:"8px 0", padding:"var(--sp)", background:"var(--surface)", borderRadius:"var(--r)", 
               border:`var(--bw) solid var(--border)`, fontSize:"14px"}}>
               Thank you for choosing our services. Payment is due within 30 days of invoice date.
-              For any questions, please contact us at {profile?.email}.
+              For any questions, please contact us at {ctx.company.email}.
             </div>
           </div>
           <TotalsCard/>
