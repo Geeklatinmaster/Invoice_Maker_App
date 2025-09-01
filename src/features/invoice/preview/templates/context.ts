@@ -1,7 +1,12 @@
 import { useInvoice } from "@/features/invoice/store/useInvoice";
+import type { ShowOn, DocType } from "@/features/invoice/store/useInvoice";
 import { formatMoney } from "../../lib/format";
 import type { TemplateVM } from "./types";
 import { useMemo } from "react";
+
+// Helper function for visibility logic
+const visible = (enabled: boolean, showOn: ShowOn, docType: DocType) =>
+  enabled && (showOn === "BOTH" || showOn === docType);
 
 export function buildTemplateContext(s: ReturnType<typeof useInvoice.getState>): TemplateVM {
   const profile = s.profiles?.find(p => p.id === s.selectedProfileId) ?? s.profiles?.[0];
@@ -74,6 +79,16 @@ export function buildTemplateContext(s: ReturnType<typeof useInvoice.getState>):
       enabled: invoice.footer?.mode !== 'none',
       mode: invoice.footer?.mode || 'social',
       showTerms: invoice.footer?.showTerms || false,
+      style: s.footerState?.style,
+      notes: visible(s.footerState?.notes?.enabled ?? false, s.footerState?.notes?.showOn ?? "BOTH", invoice.docType || "QUOTE")
+        ? { show: true, text: s.footerState.notes.text }
+        : undefined,
+      terms: visible(s.footerState?.terms?.enabled ?? false, s.footerState?.terms?.showOn ?? "INVOICE", invoice.docType || "QUOTE")
+        ? { show: true, text: s.footerState.terms.text }
+        : undefined,
+      payment: visible(s.footerState?.payment?.enabled ?? false, s.footerState?.payment?.showOn ?? "BOTH", invoice.docType || "QUOTE")
+        ? { show: true, items: s.footerState.payment.items }
+        : undefined,
     },
     settings: { locale, currency, decimals },
     meta: {
@@ -90,9 +105,10 @@ export function useTemplateContext(): TemplateVM {
   const selectedProfileId = useInvoice(s => s.selectedProfileId);
   const invoice = useInvoice(s => s.invoice);
   const totals = useInvoice(s => s.totals);
+  const footerState = useInvoice(s => s.footerState);
   
   // Memoize the context to prevent infinite re-renders
   return useMemo(() => {
-    return buildTemplateContext({ profiles, selectedProfileId, invoice, totals } as any);
-  }, [profiles, selectedProfileId, invoice, totals]);
+    return buildTemplateContext({ profiles, selectedProfileId, invoice, totals, footerState } as any);
+  }, [profiles, selectedProfileId, invoice, totals, footerState]);
 }

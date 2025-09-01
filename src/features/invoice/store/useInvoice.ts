@@ -4,6 +4,22 @@ import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
 import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset, FooterSettings, ThemeSettings, LogoSettings, LogoSize, LogoAlign, SocialLink } from "../types/types";
 
+// --- New Footer by DocType Types ---
+export type ShowOn = "BOTH" | "QUOTE" | "INVOICE";
+export type { DocType } from "../types/types";
+
+type FooterSectionBase = { enabled: boolean; showOn: ShowOn };
+type FooterNotes   = FooterSectionBase & { text: string };
+type FooterTerms   = FooterSectionBase & { text: string };
+type FooterPayment = FooterSectionBase & { items: string[] };
+
+type FooterState = {
+  style?: string;
+  notes: FooterNotes;
+  terms: FooterTerms;
+  payment: FooterPayment;
+};
+
 // Robust code generation helpers
 const rand = (n = 5) => Math.random().toString(36).slice(2, 2 + n).toUpperCase();
 const makeCode = (docType: DocType) =>
@@ -43,6 +59,14 @@ const defaultFooter: FooterData = {
   colorBarHeight: 0,
 };
 
+// --- Default FooterState for new functionality ---
+const defaultFooterState: FooterState = {
+  style: "Brand",
+  notes:   { enabled: true,  showOn: "BOTH",    text: "Thank you for choosing our services. Payment is due within 30 days of invoice date. For any questions, please contact us." },
+  terms:   { enabled: false, showOn: "INVOICE", text: "Payment is due within 30 days of invoice date." },
+  payment: { enabled: false, showOn: "BOTH",    items: ["Payment due within 30 days", "Late fees may apply after due date"] },
+};
+
 export type CustomizerSettings = {
   logoSize: number;
   logoPosition: 'left' | 'center' | 'right';
@@ -79,6 +103,7 @@ type InvoiceStore = {
   totals: Totals;
   renderVersion: number;
   customizer: CustomizerSettings;
+  footerState: FooterState;
   
   // Profile actions
   selectProfile: (id: string) => void;
@@ -144,6 +169,14 @@ type InvoiceStore = {
   updateFooterField: (key: string, value: any) => void;
   setTerms: (terms: string) => void;
   
+  // New Footer by DocType actions
+  setFooterEnabled: (section: "notes"|"terms"|"payment", enabled: boolean) => void;
+  setFooterShowOn: (section: "notes"|"terms"|"payment", showOn: ShowOn) => void;
+  setFooterText: (section: "notes"|"terms", text: string) => void;
+  addPaymentCondition: (text: string) => void;
+  updatePaymentCondition: (index: number, text: string) => void;
+  removePaymentCondition: (index: number) => void;
+  
   // Computation
   compute: () => void;
 };
@@ -201,6 +234,7 @@ const initialState = {
   totals: createDefaultTotals(),
   renderVersion: 0,
   customizer: defaultCustomizer,
+  footerState: defaultFooterState,
 };
 
 export const useInvoice = create<InvoiceStore>()(
@@ -758,6 +792,41 @@ export const useInvoice = create<InvoiceStore>()(
     }));
     get().compute();
   },
+
+  // --- New Footer by DocType Actions ---
+  setFooterEnabled: (section, enabled) =>
+    set(s => ({ footerState: { ...s.footerState, [section]: { ...s.footerState[section], enabled } } })),
+
+  setFooterShowOn: (section, showOn) =>
+    set(s => ({ footerState: { ...s.footerState, [section]: { ...s.footerState[section], showOn } } })),
+
+  setFooterText: (section, text) =>
+    set(s => ({ footerState: { ...s.footerState, [section]: { ...s.footerState[section], text } } })),
+
+  addPaymentCondition: (text) =>
+    set(s => ({ footerState: { ...s.footerState, payment: { ...s.footerState.payment, items: [...s.footerState.payment.items, text] } } })),
+
+  updatePaymentCondition: (index, text) =>
+    set(s => ({
+      footerState: {
+        ...s.footerState,
+        payment: {
+          ...s.footerState.payment,
+          items: s.footerState.payment.items.map((t, i) => (i === index ? text : t)),
+        },
+      },
+    })),
+
+  removePaymentCondition: (index) =>
+    set(s => ({
+      footerState: {
+        ...s.footerState,
+        payment: {
+          ...s.footerState.payment,
+          items: s.footerState.payment.items.filter((_, i) => i !== index),
+        },
+      },
+    })),
       }),
       {
         name: 'invoice-store',
@@ -766,13 +835,32 @@ export const useInvoice = create<InvoiceStore>()(
           const s = (persisted ?? {}) as any;
           const prevCustomizer = s.customizer ?? {};
           const prev = s.invoice?.footer ?? {};
+          const legacyFooterState = s.footerState ?? {};
 
           // Intentar mapear del pasado:
           const altRows = s?.profiles?.find?.((p: any) => p.id === s.selectedProfileId)?.theme?.altRowStripesOn;
           const totalsAlign = s?.invoice?.totalsAlign;
+          
+          // Migrate legacy footer data if it exists
+          const migratedFooterState = {
+            ...defaultFooterState,
+            ...legacyFooterState,
+            // Migrate from legacy invoice.notes or invoice.termsEnabled if they exist
+            notes: {
+              ...defaultFooterState.notes,
+              ...(legacyFooterState.notes ?? {}),
+              text: legacyFooterState.notes?.text ?? s.invoice?.notes ?? defaultFooterState.notes.text,
+            },
+            terms: {
+              ...defaultFooterState.terms,
+              ...(legacyFooterState.terms ?? {}),
+              enabled: legacyFooterState.terms?.enabled ?? s.invoice?.termsEnabled ?? defaultFooterState.terms.enabled,
+            },
+          };
 
           return {
             ...s,
+            footerState: migratedFooterState,
             customizer: {
               ...defaultCustomizer,
               ...prevCustomizer,

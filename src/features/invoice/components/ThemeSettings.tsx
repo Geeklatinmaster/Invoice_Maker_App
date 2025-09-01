@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useInvoice, type FooterData } from "@/features/invoice/store/useInvoice";
+import FooterControls from "./FooterControls";
 
 function toast(msg: string) { try { alert(msg); } catch {} }
 
@@ -415,6 +416,11 @@ export default function ThemeSettingsPanel() {
         <section style={{ padding: 12, border: "1px solid #e5e7eb", borderRadius: 4 }}>
           <h3 style={{ margin: "0 0 12px 0", fontSize: "16px", fontWeight: "600" }}>📄 Footer</h3>
           
+          {/* New Footer Controls with DocType Awareness */}
+          <FooterControls />
+          
+          <hr style={{ margin: "16px 0", border: "none", borderTop: "1px solid #e5e7eb" }} />
+          
           <div style={{ display: "grid", gap: 8 }}>
             <label>
               Footer Layout:
@@ -427,24 +433,6 @@ export default function ThemeSettingsPanel() {
                 <option value="Simple">Simple</option>
                 <option value="Minimal">Minimal</option>
               </select>
-            </label>
-            
-            <label>
-              Notes:
-              <textarea 
-                value={notes}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setNotes(v);
-                  // commit en vivo con debounce
-                  if (notesDebRef.current) window.clearTimeout(notesDebRef.current);
-                  notesDebRef.current = window.setTimeout(() => setInvoiceFooter({ notes: v }), 200);
-                }}
-                onBlur={() => setInvoiceFooter({ notes })}  // commit final por si quedó algo en el debounce
-                placeholder="Additional notes or terms..."
-                rows={4}
-                style={{ width: "100%", padding: "4px", marginTop: "4px" }}
-              />
             </label>
             
             <label>
@@ -467,23 +455,6 @@ export default function ThemeSettingsPanel() {
                 onChange={e => setSocial(e.target.value)}
                 onBlur={() => setInvoiceFooter({ social })}
                 placeholder="Instagram @handle, YouTube @channel"
-                style={{ width: "100%", padding: "4px", marginTop: "4px" }}
-              />
-            </label>
-            
-            <label>
-              Legal Text:
-              <textarea 
-                value={legal}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setLegal(v);
-                  if (legalDebRef.current) window.clearTimeout(legalDebRef.current);
-                  legalDebRef.current = window.setTimeout(() => setInvoiceFooter({ legal: v }), 200);
-                }}
-                onBlur={() => setInvoiceFooter({ legal })}
-                placeholder="Legal disclaimers, terms, etc..."
-                rows={3}
                 style={{ width: "100%", padding: "4px", marginTop: "4px" }}
               />
             </label>

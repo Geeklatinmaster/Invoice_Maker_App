@@ -40,15 +40,44 @@ export default function NavyWave({ ctx }: { ctx: TemplateVM }){
         
         <div style={{display:"grid", gridTemplateColumns:"1fr 280px", gap:"var(--sp)", marginTop:"var(--sp)"}}>
           <div>
-            <div style={{fontWeight:700, color:"var(--acc)"}}>{ctx.doc.type === "QUOTE" ? "QUOTE VALIDITY" : "TERMS & CONDITIONS"}</div>
-            <p style={{margin:"8px 0"}}>
-              {ctx.doc.type === "QUOTE" 
-                ? "This quote is valid for 30 days from the quote date." 
-                : "Payment is due within 30 days of invoice date. Late payments may incur additional fees."}
-            </p>
+            {ctx.footer?.terms?.show ? (
+              <>
+                <div style={{fontWeight:700, color:"var(--acc)"}}>TERMS & CONDITIONS</div>
+                <p style={{margin:"8px 0"}}>{ctx.footer.terms.text}</p>
+              </>
+            ) : (
+              <>
+                <div style={{fontWeight:700, color:"var(--acc)"}}>{ctx.doc.type === "QUOTE" ? "QUOTE VALIDITY" : "TERMS & CONDITIONS"}</div>
+                <p style={{margin:"8px 0"}}>
+                  {ctx.doc.type === "QUOTE" 
+                    ? "This quote is valid for 30 days from the quote date." 
+                    : "Payment is due within 30 days of invoice date. Late payments may incur additional fees."}
+                </p>
+              </>
+            )}
           </div>
           <TotalsCard/>
         </div>
+
+        {/* New Footer Sections */}
+        <footer style={{ display:"grid", gap:12, marginTop:16 }}>
+          {ctx.footer?.notes?.show && (
+            <section className="notes-block">
+              <h4 style={{margin:"0 0 8px 0", fontWeight:700, color:"var(--acc)"}}>NOTES</h4>
+              <p style={{margin:0}}>{ctx.footer.notes.text}</p>
+            </section>
+          )}
+
+          {ctx.footer?.payment?.show && ctx.footer.payment.items.length > 0 && (
+            <section className="payment-block">
+              <h4 style={{margin:"0 0 8px 0", fontWeight:700, color:"var(--acc)"}}>PAYMENT CONDITIONS</h4>
+              <ul style={{margin:0, paddingLeft:20}}>
+                {ctx.footer.payment.items.map((t, i) => <li key={i}>{t}</li>)}
+              </ul>
+            </section>
+          )}
+        </footer>
+
         <FooterBar />
       </div>
     </section>

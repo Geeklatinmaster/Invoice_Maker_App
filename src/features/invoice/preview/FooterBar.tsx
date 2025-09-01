@@ -22,9 +22,9 @@ function Icon({ s }: { s: any }) {
 
 function FooterBarImpl() {
   // Selector estable (sin crear arrays/objetos nuevos)
-  const socials = useInvoice(s => s.invoice.socials || EMPTY, shallow);
+  const socials = useInvoice(s => s.invoice.socials || EMPTY);
   
-  if (socials.length === 0) return null;
+  if (!Array.isArray(socials) || socials.length === 0) return null;
   
   return (
     <div style={{
@@ -36,7 +36,7 @@ function FooterBarImpl() {
       borderTop: 'var(--bw) solid var(--border)',
       marginTop: 'var(--sp)'
     }}>
-      {socials.map(s => (
+      {socials.map((s: any) => (
         <div key={s.id} style={{
           display: 'inline-flex', 
           gap: 6, 

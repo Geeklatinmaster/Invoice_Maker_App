@@ -49,6 +49,10 @@ export type TemplateVM = {
     enabled: boolean;
     mode: string;
     showTerms: boolean;
+    notes?: { show: boolean; text: string };
+    terms?: { show: boolean; text: string };
+    payment?: { show: boolean; items: string[] };
+    style?: string;
   };
   settings: { 
     locale: string; 

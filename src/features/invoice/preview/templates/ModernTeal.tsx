@@ -84,12 +84,21 @@ export function ModernTeal({ ctx }: { ctx: TemplateVM }){
 
     <section style={{display:"grid", gridTemplateColumns:"1fr 280px", gap:"var(--sp)", padding:"var(--sp)"}}>
       <div>
-        <div style={{fontWeight:700, color:"var(--acc)"}}>{ctx.doc.type === "QUOTE" ? "QUOTE VALIDITY" : "TERMS & CONDITIONS"}</div>
-        <p style={{opacity:.9}}>
-          {ctx.doc.type === "QUOTE" 
-            ? "This quote is valid for 30 days from the quote date." 
-            : "Payment is due within 30 days of invoice date."}
-        </p>
+        {ctx.footer?.terms?.show ? (
+          <>
+            <div style={{fontWeight:700, color:"var(--acc)"}}>TERMS & CONDITIONS</div>
+            <p style={{opacity:.9}}>{ctx.footer.terms.text}</p>
+          </>
+        ) : (
+          <>
+            <div style={{fontWeight:700, color:"var(--acc)"}}>{ctx.doc.type === "QUOTE" ? "QUOTE VALIDITY" : "TERMS & CONDITIONS"}</div>
+            <p style={{opacity:.9}}>
+              {ctx.doc.type === "QUOTE" 
+                ? "This quote is valid for 30 days from the quote date." 
+                : "Payment is due within 30 days of invoice date."}
+            </p>
+          </>
+        )}
       </div>
       <div style={{background:"var(--surface)", border:`var(--bw) solid var(--border)`, borderRadius:"var(--r)", padding:"var(--sp)"}}>
         <Row label="Sub Total" value={ctx.totals.subTotalFmt}/>
@@ -97,6 +106,25 @@ export function ModernTeal({ ctx }: { ctx: TemplateVM }){
         <Row label="Grand Total" value={ctx.totals.grandTotalFmt} strong accent />
       </div>
     </section>
+
+    {/* New Footer Sections */}
+    <footer style={{ display:"grid", gap:12, padding:"var(--sp)" }}>
+      {ctx.footer?.notes?.show && (
+        <section className="notes-block">
+          <h4 style={{margin:"0 0 8px 0", fontWeight:700, color:"var(--acc)"}}>NOTES</h4>
+          <p style={{margin:0, opacity:.9}}>{ctx.footer.notes.text}</p>
+        </section>
+      )}
+
+      {ctx.footer?.payment?.show && ctx.footer.payment.items.length > 0 && (
+        <section className="payment-block">
+          <h4 style={{margin:"0 0 8px 0", fontWeight:700, color:"var(--acc)"}}>PAYMENT CONDITIONS</h4>
+          <ul style={{margin:0, paddingLeft:20, opacity:.9}}>
+            {ctx.footer.payment.items.map((t, i) => <li key={i}>{t}</li>)}
+          </ul>
+        </section>
+      )}
+    </footer>
     
     <FooterSlot />
   </section>);
