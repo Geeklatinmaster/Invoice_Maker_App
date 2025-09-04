@@ -1,6 +1,8 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import type { Invoice, Profile, InvoiceItem } from "@/features/invoice/types/types";
+import type { DocType, FooterState } from "@/types/invoice";
+import { selectVisibleFooter } from "@/features/invoice/selectors/footer";
 import { fmtCurrency } from "@/features/invoice/lib/format";
 
 type Totals = {
@@ -15,6 +17,7 @@ type ExportOptions = {
   profile?: Profile;
   totals?: Totals;
   logoDataUrl?: string;
+  footerState?: FooterState;
 };
 
 // Helper functions
@@ -68,7 +71,7 @@ const computeTotalsFromInvoice = (invoice: Invoice, profile?: Profile): Totals =
 };
 
 export async function exportInvoicePdf(invoice: Invoice, opts: ExportOptions = {}) {
-  const { profile, totals, logoDataUrl } = opts;
+  const { profile, totals, logoDataUrl, footerState } = opts;
   
   // Extract theme settings from profile
   const theme = profile?.theme || {};
@@ -278,42 +281,37 @@ export async function exportInvoicePdf(invoice: Invoice, opts: ExportOptions = {
       const textWidth = doc.getTextWidth(pageText);
       doc.text(pageText, (pageWidth - textWidth) / 2, pageHeight - 10);
       
-      // Footer implementation
-      let footerY = pageHeight - 25;
-      
-      // Color bar (if enabled)
-      if (footer.colorBarOn && footer.colorBarHeightPx) {
-        doc.setFillColor(...primaryRgb);
-        doc.rect(marginLeft, footerY - footer.colorBarHeightPx, usableWidth, footer.colorBarHeightPx, "F");
-        footerY -= footer.colorBarHeightPx + 3;
-      }
-      
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      
-      // Footer content based on layout
-      if (footer.layout === "corporate") {
-        if (footer.notes) {
-          doc.text(footer.notes, marginLeft, footerY);
-          footerY -= 3;
+      // Footer implementation with new visibility logic
+      if (footerState) {
+        const docType: DocType = (invoice.docType?.toLowerCase() || 'invoice') as DocType;
+        const visibleBlocks = selectVisibleFooter(docType, Object.values(footerState));
+        
+        let footerY = pageHeight - 25;
+        
+        // Color bar (if enabled in legacy footer)
+        if (footer.colorBarOn && footer.colorBarHeightPx) {
+          doc.setFillColor(...primaryRgb);
+          doc.rect(marginLeft, footerY - footer.colorBarHeightPx, usableWidth, footer.colorBarHeightPx, "F");
+          footerY -= footer.colorBarHeightPx + 3;
         }
-        if (footer.contact) {
-          doc.text(footer.contact, marginLeft, footerY);
-          footerY -= 3;
-        }
-        if (footer.legal) {
-          doc.text(footer.legal, marginLeft, footerY);
-          footerY -= 3;
-        }
-      } else {
-        // Simple layout - just notes and contact
-        if (footer.notes) {
-          doc.text(footer.notes, marginLeft, footerY);
-          footerY -= 3;
-        }
-        if (footer.contact) {
-          doc.text(footer.contact, marginLeft, footerY);
-        }
+        
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        
+        // Render visible footer blocks
+        visibleBlocks.forEach(block => {
+          if ('text' in block && block.text) {
+            // Notes or Terms sections
+            doc.text(String(block.text), marginLeft, footerY);
+            footerY -= 4;
+          } else if ('items' in block && Array.isArray(block.items) && block.items.length > 0) {
+            // Payment section
+            block.items.forEach((item: string) => {
+              doc.text(`• ${String(item)}`, marginLeft, footerY);
+              footerY -= 3;
+            });
+          }
+        });
       }
     }
   });

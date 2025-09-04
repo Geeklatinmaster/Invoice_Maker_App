@@ -1,99 +1,70 @@
 import { useInvoice } from "@/features/invoice/store/useInvoice";
-import type { ShowOn, DocType } from "@/features/invoice/store/useInvoice";
+import type { DocType } from "@/types/invoice";
+import { selectVisibleFooter } from "@/features/invoice/selectors/footer";
 import { formatMoney } from "../../lib/format";
 import type { TemplateVM } from "./types";
 import { useMemo } from "react";
 
-// Helper function for visibility logic
-const visible = (enabled: boolean, showOn: ShowOn, docType: DocType) =>
-  enabled && (showOn === "BOTH" || showOn === docType);
-
-export function buildTemplateContext(s: ReturnType<typeof useInvoice.getState>): TemplateVM {
-  const profile = s.profiles?.find(p => p.id === s.selectedProfileId) ?? s.profiles?.[0];
-  const invoice = s.invoice || {};
-  const totals = s.totals || {};
+export function buildTemplateContext(s: any): TemplateVM {
+  const docType = s.docType || 'invoice';
+  const footerState = s.footerState;
   
-  // Safe settings extraction
-  const settings = invoice.settings || { locale: 'en-US', currency: 'USD', decimals: 2 };
-  const locale = settings.locale || 'en-US';
-  const currency = settings.currency || 'USD';
-  const decimals = settings.decimals || 2;
-
-  // Process items with formatted values
-  const items = (invoice.items || []).map((item: any, idx: number) => {
-    const price = Number(item.unitPrice) || 0;
-    const qty = Number(item.qty) || 0;
-    const total = price * qty;
-    
-    return {
-      id: item.id || String(idx + 1),
-      no: idx + 1,
-      title: item.title || "",
-      description: item.description || "",
-      price,
-      qty,
-      total,
-      priceFmt: formatMoney(price, { locale, currency }),
-      totalFmt: formatMoney(total, { locale, currency }),
-    };
-  });
-
   return {
     company: {
-      name: invoice.brand?.name || profile?.businessName || "My Business",
-      email: invoice.brand?.email || profile?.email || "",
-      phone: invoice.brand?.phone || profile?.phone || "",
-      einTin: invoice.brand?.ein || profile?.taxId || "",
-      address: invoice.brand?.address || profile?.address || "",
-      logoUrl: invoice.brand?.logoUrl || profile?.logo?.logoUrl || "",
-      tagline: invoice.brand?.tagline || "",
+      name: "My Business",
+      email: "",
+      phone: "",
+      einTin: "",
+      address: "",
+      logoUrl: "",
+      tagline: "",
     },
     client: {
-      name: invoice.client?.name || "",
-      email: invoice.client?.email || "",
-      address: invoice.client?.address || "",
+      name: "",
+      email: "",
+      address: "",
     },
     doc: {
-      type: invoice.docType || "INVOICE",
-      number: invoice.meta?.number || "",
-      dateISO: invoice.meta?.date || new Date().toISOString().slice(0, 10),
-      code: invoice.code || "",
+      type: docType.toUpperCase(),
+      number: "",
+      dateISO: new Date().toISOString().slice(0, 10),
+      code: "",
     },
-    items,
+    items: [],
     totals: {
-      subTotal: totals.subtotal || 0,
-      tax: totals.tax || 0,
-      discount: totals.discount || 0,
-      retention: totals.retention || 0,
-      grandTotal: totals.total || 0,
-      subTotalFmt: formatMoney(totals.subtotal || 0, { locale, currency }),
-      taxFmt: formatMoney(totals.tax || 0, { locale, currency }),
-      discountFmt: formatMoney(totals.discount || 0, { locale, currency }),
-      retentionFmt: formatMoney(totals.retention || 0, { locale, currency }),
-      grandTotalFmt: formatMoney(totals.total || 0, { locale, currency }),
-      currencyCode: currency,
+      subTotal: 0,
+      tax: 0,
+      discount: 0,
+      retention: 0,
+      grandTotal: 0,
+      subTotalFmt: "$0.00",
+      taxFmt: "$0.00",
+      discountFmt: "$0.00",
+      retentionFmt: "$0.00",
+      grandTotalFmt: "$0.00",
+      currencyCode: "USD",
     },
-    notes: invoice.terms || "",
-    terms: invoice.terms || "",
+    notes: "",
+    terms: "",
     footer: {
-      enabled: invoice.footer?.mode !== 'none',
-      mode: invoice.footer?.mode || 'social',
-      showTerms: invoice.footer?.showTerms || false,
-      style: s.footerState?.style,
-      notes: visible(s.footerState?.notes?.enabled ?? false, s.footerState?.notes?.showOn ?? "BOTH", invoice.docType || "QUOTE")
-        ? { show: true, text: s.footerState.notes.text }
+      enabled: true,
+      mode: 'social' as const,
+      showTerms: false,
+      style: footerState?.style || 'Brand',
+      notes: selectVisibleFooter(docType, [footerState.notes]).length > 0
+        ? { show: true, text: footerState.notes.text }
         : undefined,
-      terms: visible(s.footerState?.terms?.enabled ?? false, s.footerState?.terms?.showOn ?? "INVOICE", invoice.docType || "QUOTE")
-        ? { show: true, text: s.footerState.terms.text }
+      terms: selectVisibleFooter(docType, [footerState.terms]).length > 0
+        ? { show: true, text: footerState.terms.text }
         : undefined,
-      payment: visible(s.footerState?.payment?.enabled ?? false, s.footerState?.payment?.showOn ?? "BOTH", invoice.docType || "QUOTE")
-        ? { show: true, items: s.footerState.payment.items }
+      payment: selectVisibleFooter(docType, [footerState.payment]).length > 0
+        ? { show: true, items: footerState.payment.items }
         : undefined,
     },
-    settings: { locale, currency, decimals },
+    settings: { locale: 'en-US', currency: 'USD', decimals: 2 },
     meta: {
-      number: invoice.meta?.number || "",
-      date: invoice.meta?.date || "",
+      number: "",
+      date: "",
     },
   };
 }
@@ -101,14 +72,11 @@ export function buildTemplateContext(s: ReturnType<typeof useInvoice.getState>):
 /** Hook: memoized TemplateVM for minimal re-renders */
 export function useTemplateContext(): TemplateVM {
   // Use individual selectors to avoid infinite loops
-  const profiles = useInvoice(s => s.profiles);
-  const selectedProfileId = useInvoice(s => s.selectedProfileId);
-  const invoice = useInvoice(s => s.invoice);
-  const totals = useInvoice(s => s.totals);
+  const docType = useInvoice(s => s.docType);
   const footerState = useInvoice(s => s.footerState);
   
   // Memoize the context to prevent infinite re-renders
   return useMemo(() => {
-    return buildTemplateContext({ profiles, selectedProfileId, invoice, totals, footerState } as any);
-  }, [profiles, selectedProfileId, invoice, totals, footerState]);
+    return buildTemplateContext({ docType, footerState } as any);
+  }, [docType, footerState]);
 }

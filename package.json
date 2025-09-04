@@ -7,6 +7,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dompurify": "^3.2.6",
+    "immer": "^10.1.3",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.542.0",
@@ -14,23 +15,28 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "uuid": "^11.1.0",
-    "zod": "^4.0.17",
-    "zustand": "^5.0.7"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.5",
+    "@types/node": "^24.3.1",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.34.0",
     "typescript": "^5.9.2",
-    "vite": "^7.1.2"
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4",
+    "zustand": "^5.0.8"
   },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
+    "test": "vitest run",
     "clean": "rm -rf node_modules/.cache .turbo && echo Caché limpiado. Ejecuta npm run dev",
     "clean:full": "rm -rf node_modules package-lock.json .turbo node_modules/.cache && echo Proyecto reseteado. Ejecuta npm install",
     "restart-vscode": "pkill -f 'Visual Studio Code' || true && sleep 1 && code .",
