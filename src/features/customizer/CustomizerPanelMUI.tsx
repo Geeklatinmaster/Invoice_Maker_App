@@ -9,8 +9,8 @@ export default function CustomizerPanelMUI(){
   const { tokens, setTokens, template, setTemplate } = useTheme();
   const s = useInvoice();
 
-  const docType = s.invoice.docType ?? "INVOICE";
-  const setDocType = (v:"INVOICE"|"QUOTE") => s.updateInvoice?.({ docType: v });
+  const docType = s.docType ?? "invoice";
+  const setDocType = (v:"invoice"|"quote") => s.setDocType?.(v);
 
   // Optimized handlers to prevent unnecessary updates
   const handleLogoMaxH = (_: any, v: number | number[]) => {
@@ -93,8 +93,8 @@ export default function CustomizerPanelMUI(){
           <InputLabel id="doctype">Type</InputLabel>
           <Select labelId="doctype" label="Type" value={docType}
             onChange={(e)=>setDocType(e.target.value as any)}>
-            <MenuItem value="INVOICE">Invoice</MenuItem>
-            <MenuItem value="QUOTE">Quote</MenuItem>
+            <MenuItem value="invoice">Invoice</MenuItem>
+            <MenuItem value="quote">Quote</MenuItem>
           </Select>
         </FormControl>
       </Section>
