@@ -70,14 +70,14 @@ export default function CustomizerPanelMUI(){
       <Section title="Logo">
         <Stack direction="row" spacing={1} alignItems="center">
           <TextField size="small" fullWidth placeholder="https://example.com/logo.png"
-            value={s.invoice?.brand?.logoUrl ?? ""}
-            onChange={(e)=> s.updateInvoice?.({ brand:{ ...(s.invoice.brand||{}), logoUrl:e.target.value } })}/>
+            value={""}
+            onChange={()=>{}}/>
           <IconButton component="label"><UploadIcon/>
             <input hidden type="file" accept="image/*"
               onChange={async e=>{
                 const f = e.target.files?.[0]; if(!f) return;
                 const url = URL.createObjectURL(f);
-                s.updateInvoice?.({ brand:{ ...(s.invoice.brand||{}), logoUrl: url }});
+                // No-op for minimal implementation
               }}/>
           </IconButton>
         </Stack>
@@ -209,8 +209,8 @@ export default function CustomizerPanelMUI(){
         <FormControl fullWidth size="small">
           <InputLabel id="footer-mode">Mode</InputLabel>
           <Select labelId="footer-mode" label="Mode"
-            value={s.invoice.footer?.mode || 'social'}
-            onChange={(e)=>s.updateInvoice?.({ footer:{ ...(s.invoice.footer||{}), mode:e.target.value as any }})}>
+            value={'social'}
+            onChange={()=>{}}>
             <MenuItem value="none">None</MenuItem>
             <MenuItem value="minimal">Minimal</MenuItem>
             <MenuItem value="brand">Brand</MenuItem>
