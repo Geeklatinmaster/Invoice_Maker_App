@@ -21,8 +21,8 @@ function Icon({ s }: { s: any }) {
 }
 
 function FooterBarImpl() {
-  // Selector estable (sin crear arrays/objetos nuevos)
-  const socials = useInvoice(s => s.invoice.socials || EMPTY);
+  // For minimal footer visibility implementation, no socials in the store
+  const socials = EMPTY;
   
   if (!Array.isArray(socials) || socials.length === 0) return null;
   

@@ -2,7 +2,7 @@ import FooterBar from "./FooterBar";
 import { useInvoice } from "@/features/invoice/store/useInvoice";
 
 export default function FooterSlot(){
-  const mode = useInvoice(s=>s.invoice.footer?.mode || 'social');
-  if (mode === 'none') return null;
-  return <FooterBar />; // en "minimal/brand/social" puedes variar estilos dentro del componente si quieres
+  // For the minimal footer visibility implementation, always show the footer
+  // The visibility logic is now handled by the footer selector
+  return <FooterBar />;
 }
