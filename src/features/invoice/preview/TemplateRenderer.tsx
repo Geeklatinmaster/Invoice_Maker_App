@@ -1,6 +1,6 @@
 import { useInvoice } from "@/features/invoice/store/useInvoice";
 import { useTemplateContext } from "./templates/context";
-import { templateRegistry, defaultTemplateId } from "./templates/registry";
+import { templateRegistry, defaultTemplateId } from "./templates/registry.tsx";
 
 export default function TemplateRenderer() {
   const templateId = useInvoice(s => s.templateId);
