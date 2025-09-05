@@ -5,8 +5,11 @@
     "jsx": "react-jsx",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "baseUrl": "src",
-    "paths": { "@/*": ["*"] },
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@types/*": ["src/types/*"]
+    },
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
