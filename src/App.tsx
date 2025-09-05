@@ -1,7 +1,7 @@
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import LiveCustomizer from "@/features/invoice/components/LiveCustomizer";
-import PreviewPane from "@/features/invoice/components/PreviewPane";
+import LiveCustomizer from "./features/invoice/components/LiveCustomizer";
+import PreviewPane from "./features/invoice/components/PreviewPane";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 

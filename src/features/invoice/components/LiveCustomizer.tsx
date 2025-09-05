@@ -1,6 +1,6 @@
 import React from 'react';
 import { Paper, Stack, Typography, TextField, MenuItem, FormControlLabel, Switch, Divider } from '@mui/material';
-import { useInvoice } from '@/features/invoice/store/useInvoice';
+import { useInvoice } from '../store/useInvoice';
 
 export default function LiveCustomizer() {
   const s = useInvoice();
