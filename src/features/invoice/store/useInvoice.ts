@@ -23,6 +23,8 @@ type InvoiceStore = {
   selectedProfileId: string;
   invoice: Invoice;
   totals: Totals;
+  docVersion: number;
+  templateId: string;
   
   // Profile actions
   selectProfile: (id: string) => void;
@@ -48,6 +50,9 @@ type InvoiceStore = {
   
   // Computation
   compute: () => void;
+  
+  // Template actions
+  setTemplate: (id: string) => void;
 };
 
 
@@ -87,6 +92,8 @@ const initialState = {
   selectedProfileId: "",
   invoice: createDefaultInvoice(),
   totals: createDefaultTotals(),
+  docVersion: 0,
+  templateId: "default",
 };
 
 // Load persisted state
@@ -182,6 +189,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
         docType,
         code: makeCode(docType),
       },
+      docVersion: state.docVersion + 1,
     }));
     // Auto-recompute totals after docType change
     get().compute();
@@ -205,6 +213,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
   patchInvoice: (updates: Partial<Invoice>) => {
     set(state => ({
       invoice: { ...state.invoice, ...updates },
+      docVersion: state.docVersion + 1,
     }));
     save(get());
   },
@@ -289,6 +298,15 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     }));
     // Auto-recompute totals after removing item
     get().compute();
+    save(get());
+  },
+  
+  // Template actions
+  setTemplate: (id: string) => {
+    set(state => ({
+      templateId: id,
+      docVersion: state.docVersion + 1,
+    }));
     save(get());
   },
   

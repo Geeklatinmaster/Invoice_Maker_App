@@ -22,6 +22,7 @@ export default function InvoiceForm() {
   const s = useInvoice();
   const iv = s.invoice;
   const profile = s.profiles.find(p=>p.id===s.selectedProfileId) ?? s.profiles[0];
+  const hasItems = useInvoice(state => state.invoice.items.length > 0);
 
   const validateUSA = () => {
     const errs:string[]=[];
@@ -80,23 +81,19 @@ export default function InvoiceForm() {
       <div style={{display:"flex", gap:8}}>
         <button
           onClick={async () => {
-            const currentState = useInvoice.getState();
-            const currentInvoice = currentState.invoice;
-            if (!currentInvoice || !Array.isArray(currentInvoice.items) || currentInvoice.items.length === 0) {
+            if (!hasItems) {
               toast("Add at least 1 item before exporting.");
               return;
             }
-            const currentProfile = currentState.selectedProfileId
-              ? currentState.profiles.find(p => p.id === currentState.selectedProfileId)
-              : undefined;
+            
             let logoDataUrl: string | undefined;
-            if (currentProfile && (currentProfile as any)?.logoUrl) {
-              logoDataUrl = await fetchAsDataURL((currentProfile as any).logoUrl);
+            if (profile?.logoUrl) {
+              logoDataUrl = await fetchAsDataURL(profile.logoUrl);
             }
             try {
-              await exportInvoicePdf(currentInvoice, { 
-                profile: currentProfile, 
-                totals: currentState.totals, 
+              await exportInvoicePdf(iv, { 
+                profile: profile, 
+                totals: s.totals, 
                 logoDataUrl 
               });
             } catch (err) {
@@ -104,26 +101,23 @@ export default function InvoiceForm() {
               toast("PDF export failed. Check console for details.");
             }
           }}
-          disabled={useInvoice.getState().invoice.items.length === 0}
+          disabled={!hasItems}
         >
           📄 Export PDF
         </button>
 
         <button
           onClick={() => {
-            const currentState = useInvoice.getState();
-            const currentInvoice = currentState.invoice;
-            if (!currentInvoice || !Array.isArray(currentInvoice.items) || currentInvoice.items.length === 0) {
+            if (!hasItems) {
               toast("Add at least 1 item before printing.");
               return;
             }
             try {
               localStorage.setItem("invoice:last", JSON.stringify({
-                invoice: currentInvoice,
-                totals: currentState.totals,
-                profile: currentState.selectedProfileId
-                  ? currentState.profiles.find(p => p.id === currentState.selectedProfileId)
-                  : undefined
+                invoice: iv,
+                totals: s.totals,
+                profile: profile,
+                templateId: s.templateId
               }));
               window.open("/print.html", "_blank", "noopener,noreferrer");
             } catch (e) {
