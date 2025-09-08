@@ -2,12 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fallback cuando no hay soporte de blur */
+/* Fallback si el navegador no soporta backdrop-filter */
 @supports not ((backdrop-filter: blur(1px))) {
-  .glass-fallback { 
-    background: rgba(255,255,255,.90); 
-  }
-  .dark .glass-fallback { 
-    background: rgba(2,6,23,.90); 
-  }
+  .glass-fallback { background: rgba(255,255,255,.90) !important; }
+  .dark .glass-fallback { background: rgba(15,23,42,.92) !important; } /* slate-900ish */
 }

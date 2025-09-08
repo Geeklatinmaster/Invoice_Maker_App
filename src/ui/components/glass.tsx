@@ -22,7 +22,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
 export function InputGlass(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input {...props}
-      className={`rounded-xl border border-white/30 bg-white/60 px-3 py-2 shadow-sm outline-none backdrop-blur-md
+      className={`rounded-xl border border-white/30 bg-white/60 px-3 py-2 shadow-sm outline-none backdrop-blur-md glass-fallback
                   placeholder:text-slate-400 text-slate-900 dark:text-slate-100 dark:bg-white/10 dark:border-white/20 ${props.className||""}`} />
   );
 }
@@ -30,7 +30,7 @@ export function InputGlass(props: React.InputHTMLAttributes<HTMLInputElement>) {
 export function SelectGlass({ options, defaultValue }:{ options:string[]; defaultValue?:string }) {
   return (
     <select defaultValue={defaultValue}
-      className="rounded-xl border border-white/30 bg-white/60 px-3 py-2 shadow-sm outline-none backdrop-blur-md
+      className="rounded-xl border border-white/30 bg-white/60 px-3 py-2 shadow-sm outline-none backdrop-blur-md glass-fallback
                  text-slate-900 dark:text-slate-100 dark:bg-white/10 dark:border-white/20">
       {options.map(o => <option key={o}>{o}</option>)}
     </select>
@@ -41,7 +41,7 @@ export function ButtonPrimary({ children }:{ children:React.ReactNode }) {
   return <button className="rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2 font-medium text-white shadow">{children}</button>;
 }
 export function ButtonGlass({ children }:{ children:React.ReactNode }) {
-  return <button className="rounded-xl border border-white/30 bg-white/50 px-4 py-2 font-medium text-slate-800 shadow-sm backdrop-blur-md hover:bg-white/60 dark:text-slate-100 dark:bg-white/10 dark:border-white/20 dark:hover:bg-white/15">{children}</button>;
+  return <button className="rounded-xl border border-white/30 bg-white/50 px-4 py-2 font-medium text-slate-800 shadow-sm backdrop-blur-md glass-fallback hover:bg-white/60 dark:text-slate-100 dark:bg-white/10 dark:border-white/20 dark:hover:bg-white/15">{children}</button>;
 }
 export function ButtonGhost({ children }:{ children:React.ReactNode }) {
   return <button className="rounded-xl px-4 py-2 font-medium text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">{children}</button>;
@@ -54,7 +54,7 @@ export function Kpi({ title, value, sub, tone }:{ title:string; value:string; su
     rose:   "from-rose-500/20   to-rose-300/10   text-rose-900   dark:text-rose-200",
   } as const;
   return (
-    <div className={`rounded-2xl border border-white/30 bg-gradient-to-br p-4 backdrop-blur-md shadow-sm dark:border-white/15 ${map[tone]}`}>
+    <div className={`rounded-2xl border border-white/30 bg-gradient-to-br p-4 backdrop-blur-md glass-fallback shadow-sm dark:border-white/15 ${map[tone]}`}>
       <div className="text-sm opacity-80">{title}</div>
       <div className="text-2xl font-bold leading-tight">{value}</div>
       <div className="text-xs opacity-70">{sub}</div>
@@ -63,13 +63,13 @@ export function Kpi({ title, value, sub, tone }:{ title:string; value:string; su
 }
 
 export function Chip({ children }:{ children:React.ReactNode }) {
-  return <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/40 px-3 py-1 text-xs text-slate-800 shadow-sm backdrop-blur-md dark:text-slate-100 dark:bg-white/10 dark:border-white/20">{children}</span>;
+  return <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/40 px-3 py-1 text-xs text-slate-800 shadow-sm backdrop-blur-md glass-fallback dark:text-slate-100 dark:bg-white/10 dark:border-white/20">{children}</span>;
 }
 
 export function ModeSwitch({ mode, onToggle }:{ mode:"light"|"dark"; onToggle:()=>void }) {
   return (
     <button onClick={onToggle}
-      className="rounded-2xl border border-white/30 bg-white/50 backdrop-blur-md px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm hover:bg-white/60 dark:text-slate-100 dark:bg-white/10 dark:border-white/20 dark:hover:bg-white/15">
+      className="rounded-2xl border border-white/30 bg-white/50 backdrop-blur-md glass-fallback px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm hover:bg-white/60 dark:text-slate-100 dark:bg-white/10 dark:border-white/20 dark:hover:bg-white/15">
       {mode === "dark" ? "🌙 Dark" : "☀️ Light"}
     </button>
   );
@@ -80,7 +80,7 @@ export function NavTabs({ tabs, active, onChange }:{ tabs:string[]; active:strin
     <nav className="flex gap-2">
       {tabs.map(t => (
         <button key={t} onClick={()=>onChange(t)}
-          className={`select-none rounded-full border px-3 py-1 text-sm backdrop-blur-md transition ${
+          className={`select-none rounded-full border px-3 py-1 text-sm backdrop-blur-md glass-fallback transition ${
             t===active
             ? "border-white/40 bg-white/60 text-slate-900 shadow-sm dark:bg-white/15 dark:text-slate-100 dark:border-white/20"
             : "border-white/30 bg-white/30 text-slate-700 hover:bg-white/50 dark:text-slate-300 dark:bg-white/5 dark:hover:bg-white/10"}`}>
@@ -94,7 +94,7 @@ export function NavTabs({ tabs, active, onChange }:{ tabs:string[]; active:strin
 /* Bloques de lista y preview (compartidos) */
 export function InvoicePreview() {
   return (
-    <div className="rounded-2xl border border-white/30 bg-white/60 p-4 backdrop-blur-md dark:bg-white/10 dark:border-white/20">
+    <div className="rounded-2xl border border-white/30 bg-white/60 p-4 backdrop-blur-md glass-fallback dark:bg-white/10 dark:border-white/20">
       <div className="flex items-center justify-between">
         <div className="font-medium text-slate-900 dark:text-slate-100">Geeklatinmaster LLC</div>
         <div className="text-xs text-slate-600 dark:text-slate-300">INV-202508-002</div>
