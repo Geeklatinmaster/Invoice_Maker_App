@@ -1,6 +1,8 @@
+import { useSelectedClient } from '@/store/clients'
 import { GlassCard, InputGlass, SelectGlass, ButtonPrimary, ButtonGlass, InvoicePreview, InvoiceLine, Chip } from "@/ui/components/glass";
 
 export default function Invoices(){
+  const selected = useSelectedClient()
   const rows = [
     { id: "INV-0023", client: "Geekatlantic LLC", date: "Sep 05, 2025", amount: "$445.00", status: "Pending" as const },
     { id: "INV-0022", client: "Acme Inc.",        date: "Sep 04, 2025", amount: "$2,500.00", status: "Paid"    as const },
@@ -31,8 +33,8 @@ export default function Invoices(){
       </div>
 
       <div className="xl:col-span-4 space-y-4">
-        <GlassCard title="Preview"><InvoicePreview /><div className="mt-4 flex gap-2"><ButtonGlass>Edit</ButtonGlass><ButtonGlass>Duplicate</ButtonGlass><ButtonPrimary>Export PDF</ButtonPrimary></div></GlassCard>
-        <GlassCard title="Filters"><div className="flex flex-wrap gap-2"><Chip>Last 30 days</Chip><Chip>Status: Pending</Chip><Chip>Client: Any</Chip></div></GlassCard>
+        <GlassCard title="Preview"><InvoicePreview customerName={selected?.name} /><div className="mt-4 flex gap-2"><ButtonGlass>Edit</ButtonGlass><ButtonGlass>Duplicate</ButtonGlass><ButtonPrimary>Export PDF</ButtonPrimary></div></GlassCard>
+        <GlassCard title="Filters"><div className="flex flex-wrap gap-2"><Chip>Last 30 days</Chip><Chip>Status: Pending</Chip><Chip>{selected ? `Client: ${selected.name}` : "Client: Any"}</Chip></div></GlassCard>
       </div>
     </section>
   );

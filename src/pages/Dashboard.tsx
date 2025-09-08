@@ -1,6 +1,14 @@
+import { useClients, useSelectedClient } from '@/store/clients'
 import { GlassCard, Field, InputGlass, SelectGlass, ButtonPrimary, ButtonGlass, ButtonGhost, Kpi, Chip, InvoicePreview } from "@/ui/components/glass";
 
 export default function Dashboard(){
+  const { clients, selectedClientId, selectClient } = useClients(s => ({
+    clients: s.clients,
+    selectedClientId: s.selectedClientId,
+    selectClient: s.selectClient,
+  }))
+  const selected = useSelectedClient()
+
   return (
     <>
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
@@ -15,7 +23,17 @@ export default function Dashboard(){
                   <ButtonGlass>Change</ButtonGlass>
                 </div>
               </Field>
-              <Field label="Customer"><InputGlass placeholder="John Doe" defaultValue="John Doe" /></Field>
+              <Field label="Customer">
+                <SelectGlass
+                  options={clients.map(c=>c.name)}
+                  defaultValue={clients.find(c=>c.id===selectedClientId)?.name}
+                  onChange={(e:any)=>{
+                    const name = e.target.value
+                    const match = clients.find(c=>c.name===name)
+                    if(match) selectClient(match.id)
+                  }}
+                />
+              </Field>
               <Field label="Template"><SelectGlass options={["Modern","Minimal","Bento"]} defaultValue="Modern" /></Field>
               <Field label="Issue Date"><InputGlass type="date" defaultValue="2025-08-14" /></Field>
             </div>
@@ -33,7 +51,7 @@ export default function Dashboard(){
 
         {/* RIGHT: PREVIEW */}
         <div className="xl:col-span-7">
-          <GlassCard title="Preview"><InvoicePreview /></GlassCard>
+          <GlassCard title="Preview"><InvoicePreview customerName={selected?.name} /></GlassCard>
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <GlassCard title="Shortcuts"><div className="flex flex-wrap gap-2"><Chip>Export PDF</Chip><Chip>Send via WhatsApp</Chip><Chip>Stripe Link</Chip><Chip>Duplicate</Chip></div></GlassCard>
             <GlassCard title="Tips"><p className="text-sm text-slate-700 dark:text-slate-300">Enable automatic reminders to reduce overdue invoices by up to 30%.</p></GlassCard>

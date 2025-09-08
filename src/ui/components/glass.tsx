@@ -27,9 +27,9 @@ export function InputGlass(props: React.InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
-export function SelectGlass({ options, defaultValue }:{ options:string[]; defaultValue?:string }) {
+export function SelectGlass({ options, defaultValue, onChange }:{ options:string[]; defaultValue?:string; onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void }) {
   return (
-    <select defaultValue={defaultValue}
+    <select defaultValue={defaultValue} onChange={onChange}
       className="rounded-xl border border-white/30 bg-white/60 px-3 py-2 shadow-sm outline-none backdrop-blur-md glass-fallback
                  text-slate-900 dark:text-slate-100 dark:bg-white/10 dark:border-white/20">
       {options.map(o => <option key={o}>{o}</option>)}
@@ -37,11 +37,11 @@ export function SelectGlass({ options, defaultValue }:{ options:string[]; defaul
   );
 }
 
-export function ButtonPrimary({ children }:{ children:React.ReactNode }) {
-  return <button className="rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2 font-medium text-white shadow">{children}</button>;
+export function ButtonPrimary({ children, onClick }:{ children:React.ReactNode; onClick?: () => void }) {
+  return <button onClick={onClick} className="rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2 font-medium text-white shadow">{children}</button>;
 }
-export function ButtonGlass({ children }:{ children:React.ReactNode }) {
-  return <button className="rounded-xl border border-white/30 bg-white/50 px-4 py-2 font-medium text-slate-800 shadow-sm backdrop-blur-md glass-fallback hover:bg-white/60 dark:text-slate-100 dark:bg-white/10 dark:border-white/20 dark:hover:bg-white/15">{children}</button>;
+export function ButtonGlass({ children, onClick }:{ children:React.ReactNode; onClick?: () => void }) {
+  return <button onClick={onClick} className="rounded-xl border border-white/30 bg-white/50 px-4 py-2 font-medium text-slate-800 shadow-sm backdrop-blur-md glass-fallback hover:bg-white/60 dark:text-slate-100 dark:bg-white/10 dark:border-white/20 dark:hover:bg-white/15">{children}</button>;
 }
 export function ButtonGhost({ children }:{ children:React.ReactNode }) {
   return <button className="rounded-xl px-4 py-2 font-medium text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">{children}</button>;
@@ -92,11 +92,11 @@ export function NavTabs({ tabs, active, onChange }:{ tabs:string[]; active:strin
 }
 
 /* Bloques de lista y preview (compartidos) */
-export function InvoicePreview() {
+export function InvoicePreview({ customerName }: { customerName?: string }) {
   return (
     <div className="rounded-2xl border border-white/30 bg-white/60 p-4 backdrop-blur-md glass-fallback dark:bg-white/10 dark:border-white/20">
       <div className="flex items-center justify-between">
-        <div className="font-medium text-slate-900 dark:text-slate-100">Geeklatinmaster LLC</div>
+        <div className="font-medium text-slate-900 dark:text-slate-100">{customerName || "Geeklatinmaster LLC"}</div>
         <div className="text-xs text-slate-600 dark:text-slate-300">INV-202508-002</div>
       </div>
       <div className="mt-3 text-sm text-slate-800 dark:text-slate-200">

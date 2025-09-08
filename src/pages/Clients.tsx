@@ -1,38 +1,124 @@
-import { GlassCard, InputGlass, ButtonPrimary, ClientLine } from "@/ui/components/glass";
+import { useState } from 'react'
+import { useClients, useSelectedClient, type Client } from '@/store/clients'
+import { GlassCard, Field, InputGlass, ButtonPrimary, ButtonGlass } from '@/ui/components/glass'
+
+function ClientLine({ c, active, onClick }: { c: Client; active: boolean; onClick: () => void }){
+  return (
+    <button onClick={onClick} className={`grid grid-cols-12 items-center px-2 py-2 text-left text-sm text-slate-800 dark:text-slate-200 w-full ${active ? 'bg-white/20 dark:bg-white/5' : ''}`}>
+      <div className="col-span-5 font-medium">{c.name}</div>
+      <div className="col-span-3 text-slate-600 dark:text-slate-400">{c.email}</div>
+      <div className="col-span-2">{c.invoices ?? 0}</div>
+      <div className="col-span-2 text-right font-medium">${(c.balance ?? 0).toFixed(2)}</div>
+    </button>
+  )
+}
+
+function ClientDetails({ c }:{ c: Client }){
+  const updateClient = useClients(s => s.updateClient)
+  return (
+    <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
+      <div className="text-lg font-semibold">{c.name}</div>
+      <div className="text-sm opacity-80">{c.email}</div>
+      <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+        <div className="rounded-xl border border-white/20 bg-white/10 p-3"><div className="opacity-70">Invoices</div><div className="text-xl font-bold">{c.invoices ?? 0}</div></div>
+        <div className="rounded-xl border border-white/20 bg-white/10 p-3"><div className="opacity-70">Balance</div><div className="text-xl font-bold">${(c.balance ?? 0).toFixed(2)}</div></div>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Field label="Phone"><InputGlass value={c.phone ?? ''} onChange={e=>updateClient(c.id,{ phone:(e.target as HTMLInputElement).value })} /></Field>
+        <Field label="Tax ID"><InputGlass value={c.taxId ?? ''} onChange={e=>updateClient(c.id,{ taxId:(e.target as HTMLInputElement).value })} /></Field>
+        <Field label="Address"><InputGlass value={c.address ?? ''} onChange={e=>updateClient(c.id,{ address:(e.target as HTMLInputElement).value })} /></Field>
+        <Field label="Notes"><InputGlass value={c.notes ?? ''} onChange={e=>updateClient(c.id,{ notes:(e.target as HTMLInputElement).value })} /></Field>
+      </div>
+      <div className="mt-4 flex gap-2">
+        <ButtonGlass>New Invoice</ButtonGlass>
+        <ButtonGlass>Message</ButtonGlass>
+      </div>
+    </div>
+  )
+}
+
+function NewClientModal({ onClose }:{ onClose: ()=>void }){
+  const addClient = useClients(s => s.addClient)
+  const selectClient = useClients(s => s.selectClient)
+  const [form, setForm] = useState<{name:string; email:string; phone?:string; taxId?:string; address?:string; notes?:string}>({ name:'', email:'' })
+
+  function submit(){
+    if(!form.name || !form.email) return
+    const id = addClient({ ...form })
+    selectClient(id)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-xl rounded-3xl border border-white/20 bg-white/60 backdrop-blur-xl p-5 dark:bg-white/10 dark:border-white/20">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">New Client</h3>
+          <button onClick={onClose} className="rounded-full px-3 py-1 text-sm border border-white/30 bg-white/40 dark:bg-white/10">Close</button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Name"><InputGlass value={form.name}  onChange={e=>setForm(f=>({ ...f, name:(e.target as HTMLInputElement).value }))} /></Field>
+          <Field label="Email"><InputGlass value={form.email} onChange={e=>setForm(f=>({ ...f, email:(e.target as HTMLInputElement).value }))} /></Field>
+          <Field label="Phone"><InputGlass value={form.phone||''} onChange={e=>setForm(f=>({ ...f, phone:(e.target as HTMLInputElement).value }))} /></Field>
+          <Field label="Tax ID"><InputGlass value={form.taxId||''} onChange={e=>setForm(f=>({ ...f, taxId:(e.target as HTMLInputElement).value }))} /></Field>
+          <div className="col-span-2"><Field label="Address"><InputGlass value={form.address||''} onChange={e=>setForm(f=>({ ...f, address:(e.target as HTMLInputElement).value }))} /></Field></div>
+          <div className="col-span-2"><Field label="Notes"><InputGlass value={form.notes||''} onChange={e=>setForm(f=>({ ...f, notes:(e.target as HTMLInputElement).value }))} /></Field></div>
+        </div>
+        <div className="mt-4 flex justify-end gap-2">
+          <ButtonGlass onClick={onClose}>Cancel</ButtonGlass>
+          <ButtonPrimary onClick={submit}>Add Client</ButtonPrimary>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function Clients(){
-  const clients = [
-    { name: "Geekatlantic LLC", email: "demo@email.com", invoices: 14, balance: "$445.00" },
-    { name: "Acme Inc.",        email: "billing@acme.com", invoices: 8, balance: "$0.00" },
-    { name: "John Doe",         email: "john@example.com",  invoices: 3, balance: "$120.00" },
-    { name: "Sample Co.",       email: "ap@sample.co",      invoices: 5, balance: "$300.00" },
-  ];
+  const { clients, selectedClientId, selectClient } = useClients(s => ({
+    clients: s.clients,
+    selectedClientId: s.selectedClientId,
+    selectClient: s.selectClient,
+  }))
+  const selected = useSelectedClient()
+  const [open, setOpen] = useState(false)
+
   return (
     <section className="grid grid-cols-1 xl:grid-cols-12 gap-6">
       <div className="xl:col-span-8 space-y-4">
         <GlassCard>
           <div className="flex flex-wrap items-center gap-3">
             <InputGlass placeholder="Search clients…" className="flex-1" />
-            <ButtonPrimary>New Client</ButtonPrimary>
+            <ButtonPrimary onClick={()=>setOpen(true)}>New Client</ButtonPrimary>
           </div>
         </GlassCard>
 
         <GlassCard>
           <div className="grid grid-cols-12 px-2 py-2 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            <div className="col-span-5">Client</div><div className="col-span-3">Email</div>
-            <div className="col-span-2">Invoices</div><div className="col-span-2 text-right">Balance</div>
+            <div className="col-span-5">Client</div>
+            <div className="col-span-3">Email</div>
+            <div className="col-span-2">Invoices</div>
+            <div className="col-span-2 text-right">Balance</div>
           </div>
           <div className="divide-y divide-white/20">
-            {clients.map(c => <ClientLine key={c.email} {...c} />)}
+            {clients.map((c)=> (
+              <ClientLine key={c.id} c={c} active={c.id===selectedClientId} onClick={()=>selectClient(c.id)} />
+            ))}
           </div>
         </GlassCard>
       </div>
 
       <div className="xl:col-span-4 space-y-4">
         <GlassCard title="Client details">
-          <div className="text-sm text-slate-600 dark:text-slate-400">Select a client to view details</div>
+          {selected ? (
+            <ClientDetails c={selected} />
+          ) : (
+            <div className="text-sm text-slate-600 dark:text-slate-400">Select a client to view details.</div>
+          )}
         </GlassCard>
       </div>
+
+      {open && <NewClientModal onClose={()=>setOpen(false)} />}
     </section>
-  );
+  )
 }
