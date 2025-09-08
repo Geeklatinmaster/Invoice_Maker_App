@@ -51,7 +51,10 @@ export const useClients = create<ClientsState>()(
   )
 )
 
-// Selectores útiles
+// Selectores útiles - usando shallow para evitar re-renders innecesarios
 export const useSelectedClient = () => {
-  return useClients(s => s.clients.find(c => c.id === s.selectedClientId) ?? null)
+  return useClients(s => {
+    if (!s.selectedClientId) return null
+    return s.clients.find(c => c.id === s.selectedClientId) ?? null
+  })
 }

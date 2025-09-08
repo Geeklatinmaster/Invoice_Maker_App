@@ -1,13 +1,18 @@
+import { useCallback } from 'react'
 import { useClients, useSelectedClient } from '@/store/clients'
 import { GlassCard, Field, InputGlass, SelectGlass, ButtonPrimary, ButtonGlass, ButtonGhost, Kpi, Chip, InvoicePreview } from "@/ui/components/glass";
 
 export default function Dashboard(){
-  const { clients, selectedClientId, selectClient } = useClients(s => ({
-    clients: s.clients,
-    selectedClientId: s.selectedClientId,
-    selectClient: s.selectClient,
-  }))
+  const clients = useClients(s => s.clients)
+  const selectedClientId = useClients(s => s.selectedClientId)
+  const selectClient = useClients(s => s.selectClient)
   const selected = useSelectedClient()
+
+  const handleClientChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const name = e.target.value
+    const match = clients.find(c => c.name === name)
+    if (match) selectClient(match.id)
+  }, [clients, selectClient])
 
   return (
     <>
@@ -26,12 +31,8 @@ export default function Dashboard(){
               <Field label="Customer">
                 <SelectGlass
                   options={clients.map(c=>c.name)}
-                  defaultValue={clients.find(c=>c.id===selectedClientId)?.name}
-                  onChange={(e:any)=>{
-                    const name = e.target.value
-                    const match = clients.find(c=>c.name===name)
-                    if(match) selectClient(match.id)
-                  }}
+                  value={selected?.name}
+                  onChange={handleClientChange}
                 />
               </Field>
               <Field label="Template"><SelectGlass options={["Modern","Minimal","Bento"]} defaultValue="Modern" /></Field>

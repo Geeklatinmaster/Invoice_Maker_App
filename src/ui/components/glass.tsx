@@ -27,12 +27,15 @@ export function InputGlass(props: React.InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
-export function SelectGlass({ options, defaultValue, onChange }:{ options:string[]; defaultValue?:string; onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void }) {
+export function SelectGlass({ options, value, defaultValue, onChange }:{ options:string[]; value?:string; defaultValue?:string; onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void }) {
   return (
-    <select defaultValue={defaultValue} onChange={onChange}
+    <select 
+      value={value}
+      defaultValue={value === undefined ? defaultValue : undefined}
+      onChange={onChange}
       className="rounded-xl border border-white/30 bg-white/60 px-3 py-2 shadow-sm outline-none backdrop-blur-md glass-fallback
                  text-slate-900 dark:text-slate-100 dark:bg-white/10 dark:border-white/20">
-      {options.map(o => <option key={o}>{o}</option>)}
+      {options.map(o => <option key={o} value={o}>{o}</option>)}
     </select>
   );
 }

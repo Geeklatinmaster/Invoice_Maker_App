@@ -75,11 +75,9 @@ function NewClientModal({ onClose }:{ onClose: ()=>void }){
 }
 
 export default function Clients(){
-  const { clients, selectedClientId, selectClient } = useClients(s => ({
-    clients: s.clients,
-    selectedClientId: s.selectedClientId,
-    selectClient: s.selectClient,
-  }))
+  const clients = useClients(s => s.clients)
+  const selectedClientId = useClients(s => s.selectedClientId)
+  const selectClient = useClients(s => s.selectClient)
   const selected = useSelectedClient()
   const [open, setOpen] = useState(false)
 
