@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import i18n from "@/i18n";
 
 export type AppLanguage = "es" | "en";
 export type AppLocale = "es-VE" | "es-ES" | "en-US";
@@ -21,6 +22,10 @@ export const useSettings = create<SettingsState>((set, get) => {
 
   const persist = () => writeLS(LS_KEY, get());
 
+  // Initialize document language and i18n on store creation
+  document.documentElement.lang = language;
+  i18n.changeLanguage(language);
+
   return {
     language,
     locale,
@@ -28,6 +33,7 @@ export const useSettings = create<SettingsState>((set, get) => {
       const loc = lang === "es" ? "es-VE" : "en-US";
       set({ language: lang, locale: loc });
       document.documentElement.lang = lang;
+      i18n.changeLanguage(lang);
       persist();
     },
     setLocale: (loc) => { set({ locale: loc }); persist(); },

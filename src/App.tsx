@@ -5,10 +5,14 @@ import Clients from "@/pages/Clients";
 import { useEffect, useState } from "react";
 import { ModeSwitch, NavTabs } from "@/ui/components/glass";
 import LanguageSwitcher from "@/features/settings/LanguageSwitcher";
+import { useSettings } from "@/store/useSettings";
 
 function Shell(){
   const [mode,setMode] = useState<'light'|'dark'>(() => (localStorage.getItem('mode') as any) || 'light');
   const location = useLocation(); const navigate = useNavigate();
+  
+  // Initialize settings store (this will set up i18n language)
+  useSettings();
   
   useEffect(()=>{ 
     document.documentElement.classList.toggle('dark', mode==='dark'); 
