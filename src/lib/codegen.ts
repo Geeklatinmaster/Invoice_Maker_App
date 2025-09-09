@@ -1,8 +1,14 @@
-interface DocumentSequence {
-  year: number;
-  sequence: number;
+// src/lib/codegen.ts
+import { DocType } from '@/types/invoice';
+
+const pad = (n: number, width = 5) => String(n).padStart(width, '0');
+
+export function nextDocCode(docType: DocType, lastSeq: number) {
+  const prefix = docType === 'invoice' ? 'INV' : 'QTE';
+  return `${prefix}-${pad(lastSeq + 1)}`;
 }
 
+// Legacy functions - kept for backward compatibility
 interface BrandSequences {
   [brandPrefix: string]: {
     [year: number]: number;
@@ -59,15 +65,4 @@ export function getCurrentSequence(brandPrefix: string, year?: number): number {
   }
   
   return sequences[brandPrefix][targetYear];
-}
-
-export function setSequence(brandPrefix: string, year: number, sequence: number): void {
-  const sequences = loadSequences();
-  
-  if (!sequences[brandPrefix]) {
-    sequences[brandPrefix] = {};
-  }
-  
-  sequences[brandPrefix][year] = sequence;
-  saveSequences(sequences);
 }

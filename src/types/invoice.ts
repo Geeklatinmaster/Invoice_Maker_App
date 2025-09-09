@@ -1,56 +1,77 @@
-export type DocType = "invoice" | "quote";
+// src/types/invoice.ts
+export type DocType = 'invoice' | 'quote';
 
-export type Brand = {
-  name?: string; 
-  email?: string; 
-  phone?: string; 
+export type LineItem = {
+  id: string;
+  title: string;
+  description?: string;
+  qty: number;             // >= 0
+  unitPrice: number;       // >= 0
+  taxRate?: number;        // % 0..100 (por ítem opcional)
+  retentionRate?: number;  // % 0..100 (por ítem opcional)
+  discount?: number;       // absoluto por ítem (opcional)
+};
+
+export type BrandProfile = {
+  id: string;
+  name: string;
+  logoUrl?: string;
+  colors?: { primary?: string; secondary?: string };
+  footerBlocks: { showOnInvoice: boolean; showOnQuote: boolean; text: string }[];
+  taxConfig?: { globalRate?: number; perItem?: boolean };
+  currency: string; // ISO code e.g. "USD", "VES", "EUR"
+};
+
+export type Client = {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
   address?: string;
-  logoUrl?: string; 
-  ein?: string; 
-  tin?: string; 
-  tagline?: string; 
-  logoDataUrl?: string;
 };
 
-export type Client = { 
-  name?: string; 
-  email?: string; 
-  address?: string; 
+export type InvoiceStatus = 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue';
+
+export type InvoiceDoc = {
+  id: string;
+  docType: DocType;      // 'invoice' | 'quote'
+  code: string;          // autonum por docType
+  brandProfileId: string;
+  clientId: string;
+  issueDate: string;     // ISO
+  dueDate?: string;      // ISO
+  items: LineItem[];
+  globalDiscount?: number; // absoluto
+  notes?: string;
+  legalText?: string;
+  currency: string;        // redundante a profile si decides congelar moneda por doc
+  status: InvoiceStatus;
+  totals: {
+    subtotal: number;
+    discount: number;
+    tax: number;
+    retention: number;
+    grandTotal: number;
+  };
 };
 
-export type Item = {
-  id?: string; 
-  description?: string; 
-  title?: string;
-  qty?: number; 
-  unit?: string; 
-  unitPrice?: number; 
-  taxRate?: number; 
-  discount?: number;
+export type AppPrefs = {
+  lang: 'es' | 'en';
+  theme: 'light' | 'dark';
 };
 
-export type Settings = { 
-  locale?: string; 
-  currency?: string; 
-  decimals?: number; 
-};
+export type AppState = {
+  invoices: Record<string, InvoiceDoc>;
+  clients: Record<string, Client>;
+  brandProfiles: Record<string, BrandProfile>;
+  selectedInvoiceId?: string;
+  prefs: AppPrefs;
 
-export type Meta = { 
-  number?: string; 
-  date?: string; 
-};
-
-export type FooterState = { 
-  payment?: { 
-    items?: any[]; 
-  }; 
-};
-
-export type InvoiceModel = {
-  brand?: Brand; 
-  client?: Client; 
-  items?: Item[];
-  settings?: Settings; 
-  meta?: Meta; 
-  footer?: any;
+  // Actions
+  setSelectedInvoiceId: (id?: string) => void;
+  upsertInvoice: (doc: Partial<InvoiceDoc> & { id: string }) => void;
+  updateCurrentInvoice: (patch: Partial<InvoiceDoc>) => void;
+  addLineItem: (item: LineItem) => void;
+  removeLineItem: (id: string) => void;
+  setPrefs: (p: Partial<AppPrefs>) => void;
 };
