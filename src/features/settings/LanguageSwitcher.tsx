@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useSettings, type AppLanguage } from "@/store/useSettings";
 
 export default function LanguageSwitcher() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   const { language, setLanguage } = useSettings();
 
   const handleLanguageChange = (newLanguage: AppLanguage) => {
@@ -12,7 +12,7 @@ export default function LanguageSwitcher() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <label style={{ fontSize: 14, fontWeight: 500 }}>
-        {t("settings.language")}:
+        {t("language")}:
       </label>
       <select 
         value={language} 
@@ -24,8 +24,8 @@ export default function LanguageSwitcher() {
           fontSize: 14 
         }}
       >
-        <option value="es">{t("settings.spanish")}</option>
-        <option value="en">{t("settings.english")}</option>
+        <option value="es">{t("spanish")}</option>
+        <option value="en">{t("english")}</option>
       </select>
     </div>
   );

@@ -1,0 +1,33 @@
+{
+  "title": "Clients",
+  "addClient": "Add Client",
+  "editClient": "Edit Client",
+  "clientDetails": "Client Details",
+  "name": "Name",
+  "email": "Email",
+  "phone": "Phone",
+  "address": "Address",
+  "city": "City",
+  "state": "State",
+  "zipCode": "ZIP Code",
+  "country": "Country",
+  "taxId": "Tax ID",
+  "website": "Website",
+  "contactPerson": "Contact Person",
+  "notes": "Notes",
+  "emptyState": {
+    "title": "No clients yet",
+    "description": "Add your first client to start creating invoices",
+    "addButton": "Add Client"
+  },
+  "actions": {
+    "editFromBillTo": "Edit from Bill To",
+    "createInvoice": "Create Invoice",
+    "createQuote": "Create Quote"
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "emailInvalid": "Please enter a valid email",
+    "phoneInvalid": "Please enter a valid phone number"
+  }
+}

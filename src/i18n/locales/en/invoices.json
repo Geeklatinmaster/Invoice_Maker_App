@@ -1,0 +1,40 @@
+{
+  "title": "Invoices",
+  "quote": "Quote",
+  "invoice": "Invoice",
+  "create": "Create",
+  "edit": "Edit",
+  "duplicate": "Duplicate",
+  "preview": "Preview",
+  "markAsSent": "Mark as Sent",
+  "items": "Items",
+  "addItem": "Add Item",
+  "description": "Description",
+  "quantity": "Quantity",
+  "unitPrice": "Unit Price",
+  "lineTotal": "Line Total",
+  "subtotal": "Subtotal",
+  "tax": "Tax",
+  "discount": "Discount",
+  "total": "Total",
+  "notes": "Notes",
+  "legalText": "Legal Text",
+  "issueDate": "Issue Date",
+  "dueDate": "Due Date",
+  "documentNumber": "Document Number",
+  "generate": "Generate",
+  "billFrom": "Bill From",
+  "billTo": "Bill To",
+  "selectClient": "Select Client",
+  "addNewClient": "Add New Client",
+  "emptyState": {
+    "title": "No invoices yet",
+    "description": "Create your first invoice to get started",
+    "createButton": "Create Invoice"
+  },
+  "actions": {
+    "send": "Send",
+    "download": "Download PDF",
+    "share": "Share"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "overview": "Overview",
+  "filters": {
+    "both": "Invoices + Quotes",
+    "last30": "Last 30 days",
+    "last90": "Last 90 days",
+    "thisYear": "This year",
+    "all": "All time"
+  },
+  "kpi": {
+    "total": "Billed",
+    "paid": "Received",
+    "unpaid": "Outstanding",
+    "overdue": "Past Due",
+    "clients": "Active"
+  },
+  "status": {
+    "draft": "Draft",
+    "sent": "Sent",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "cancelled": "Cancelled"
+  },
+  "actions": {
+    "createInvoice": "New Invoice",
+    "createQuote": "New Quote",
+    "viewAll": "View All"
+  },
+  "charts": {
+    "revenueByMonth": "Revenue by Month",
+    "statusDistribution": "Status Distribution"
+  }
+}

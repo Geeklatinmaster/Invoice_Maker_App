@@ -1,0 +1,33 @@
+{
+  "title": "Clientes",
+  "addClient": "Agregar Cliente",
+  "editClient": "Editar Cliente",
+  "clientDetails": "Detalles del Cliente",
+  "name": "Nombre",
+  "email": "Email",
+  "phone": "Teléfono",
+  "address": "Dirección",
+  "city": "Ciudad",
+  "state": "Estado/Provincia",
+  "zipCode": "Código Postal",
+  "country": "País",
+  "taxId": "RIF/NIT",
+  "website": "Sitio Web",
+  "contactPerson": "Persona de Contacto",
+  "notes": "Notas",
+  "emptyState": {
+    "title": "Aún no hay clientes",
+    "description": "Agrega tu primer cliente para comenzar a crear facturas",
+    "addButton": "Agregar Cliente"
+  },
+  "actions": {
+    "editFromBillTo": "Editar desde Facturar a",
+    "createInvoice": "Crear Factura",
+    "createQuote": "Crear Cotización"
+  },
+  "validation": {
+    "nameRequired": "El nombre es requerido",
+    "emailInvalid": "Por favor ingresa un email válido",
+    "phoneInvalid": "Por favor ingresa un número de teléfono válido"
+  }
+}

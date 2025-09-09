@@ -1,0 +1,40 @@
+{
+  "title": "Facturas",
+  "quote": "Cotización",
+  "invoice": "Factura",
+  "create": "Crear",
+  "edit": "Editar",
+  "duplicate": "Duplicar",
+  "preview": "Vista previa",
+  "markAsSent": "Marcar como enviado",
+  "items": "Artículos",
+  "addItem": "Agregar artículo",
+  "description": "Descripción",
+  "quantity": "Cantidad",
+  "unitPrice": "Precio unitario",
+  "lineTotal": "Total línea",
+  "subtotal": "Subtotal",
+  "tax": "Impuesto",
+  "discount": "Descuento",
+  "total": "Total",
+  "notes": "Notas",
+  "legalText": "Texto legal",
+  "issueDate": "Fecha de emisión",
+  "dueDate": "Fecha de vencimiento",
+  "documentNumber": "Número de documento",
+  "generate": "Generar",
+  "billFrom": "Facturar desde",
+  "billTo": "Facturar a",
+  "selectClient": "Seleccionar cliente",
+  "addNewClient": "Agregar nuevo cliente",
+  "emptyState": {
+    "title": "Aún no hay facturas",
+    "description": "Crea tu primera factura para comenzar",
+    "createButton": "Crear Factura"
+  },
+  "actions": {
+    "send": "Enviar",
+    "download": "Descargar PDF",
+    "share": "Compartir"
+  }
+}
