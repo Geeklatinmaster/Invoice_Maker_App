@@ -1,20 +1,23 @@
 import { useState } from 'react'
 import { useClients, useSelectedClient, type Client } from '@/store/clients'
+import { useActiveBrand } from '@/store/brands'
 import { GlassCard, Field, InputGlass, ButtonPrimary, ButtonGlass } from '@/ui/components/glass'
+import { formatMoney } from '@/lib/format'
 
-function ClientLine({ c, active, onClick }: { c: Client; active: boolean; onClick: () => void }){
+function ClientLine({ c, active, onClick, currency = 'USD' }: { c: Client; active: boolean; onClick: () => void; currency?: string }){
   return (
     <button onClick={onClick} className={`grid grid-cols-12 items-center px-2 py-2 text-left text-sm text-slate-800 dark:text-slate-200 w-full ${active ? 'bg-white/20 dark:bg-white/5' : ''}`}>
       <div className="col-span-5 font-medium">{c.name}</div>
       <div className="col-span-3 text-slate-600 dark:text-slate-400">{c.email}</div>
       <div className="col-span-2">{c.invoices ?? 0}</div>
-      <div className="col-span-2 text-right font-medium">${(c.balance ?? 0).toFixed(2)}</div>
+      <div className="col-span-2 text-right font-medium">{formatMoney(c.balance ?? 0, currency)}</div>
     </button>
   )
 }
 
 function ClientDetails({ c }:{ c: Client }){
   const updateClient = useClients(s => s.updateClient)
+  const activeBrand = useActiveBrand()
   
   const handleNewInvoice = () => {
     // Navigate to Invoices tab - using custom event to communicate with parent
@@ -27,7 +30,7 @@ function ClientDetails({ c }:{ c: Client }){
       <div className="text-sm opacity-80">{c.email}</div>
       <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-xl border border-white/20 bg-white/10 p-3"><div className="opacity-70">Invoices</div><div className="text-xl font-bold">{c.invoices ?? 0}</div></div>
-        <div className="rounded-xl border border-white/20 bg-white/10 p-3"><div className="opacity-70">Balance</div><div className="text-xl font-bold">${(c.balance ?? 0).toFixed(2)}</div></div>
+        <div className="rounded-xl border border-white/20 bg-white/10 p-3"><div className="opacity-70">Balance</div><div className="text-xl font-bold">{formatMoney(c.balance ?? 0, activeBrand?.currency || 'USD')}</div></div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Field label="Phone"><InputGlass value={c.phone ?? ''} onChange={e=>updateClient(c.id,{ phone:(e.target as HTMLInputElement).value })} /></Field>
@@ -85,6 +88,7 @@ export default function Clients(){
   const selectedClientId = useClients(s => s.selectedClientId)
   const selectClient = useClients(s => s.selectClient)
   const selected = useSelectedClient()
+  const activeBrand = useActiveBrand()
   const [open, setOpen] = useState(false)
 
   return (
@@ -106,7 +110,7 @@ export default function Clients(){
           </div>
           <div className="divide-y divide-white/20">
             {clients.map((c)=> (
-              <ClientLine key={c.id} c={c} active={c.id===selectedClientId} onClick={()=>selectClient(c.id)} />
+              <ClientLine key={c.id} c={c} active={c.id===selectedClientId} onClick={()=>selectClient(c.id)} currency={activeBrand?.currency || 'USD'} />
             ))}
           </div>
         </GlassCard>

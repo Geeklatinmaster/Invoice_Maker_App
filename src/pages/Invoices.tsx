@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useClients } from '@/store/clients'
+import { useActiveBrand } from '@/store/brands'
 import { GlassCard, InputGlass, SelectGlass, ButtonPrimary, ButtonGlass, Chip } from "@/ui/components/glass";
 import ItemRowEditor from '@/components/ItemRowEditor';
+import { formatMoney } from '@/lib/format';
 
 // ===== Invoices Types & Utils =====
 type InvoiceStatus = "Draft" | "Sent" | "Paid" | "Overdue";
@@ -29,12 +31,16 @@ type Invoice = {
   items: InvoiceItem[];
   globalDiscountRate?: number;
   globalTaxRate?: number;
+  // Status tracking fields for analytics
+  sentAt?: string;
+  viewedAt?: string;
+  paidAt?: string;
+  voidAt?: string;
 };
 
 const uid = (p = "id") => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,6)}`;
 const today = () => new Date().toISOString().slice(0,10);
-export const fmt = (n: number, cur: Currency = "USD") =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: cur }).format(n);
+export const fmt = (n: number, cur: Currency = "USD") => formatMoney(n, cur);
 
 function calcItemTotals(it: InvoiceItem){
   const base = it.qty * it.unitPrice;

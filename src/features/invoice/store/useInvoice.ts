@@ -48,6 +48,9 @@ type InvoiceStore = {
   
   // Computation
   compute: () => void;
+  
+  // Dashboard selectors
+  selectActiveProfile: () => Profile | null;
 };
 
 
@@ -292,6 +295,12 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     save(get());
   },
   
+  // Dashboard selectors (for active profile info)
+  selectActiveProfile: () => {
+    const state = get();
+    return state.profiles.find(p => p.id === state.selectedProfileId) || state.profiles[0] || null;
+  },
+
   // Computation
   compute: () => {
     const state = get();
