@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom';
 import { useClients } from '@/store/clients'
 import { useActiveBrand } from '@/store/brands'
+import { useAppStore } from '@/store/invoiceStore';
 import { GlassCard, InputGlass, SelectGlass, ButtonPrimary, ButtonGlass, Chip } from "@/ui/components/glass";
 import ItemRowEditor from '@/components/ItemRowEditor';
 import { formatMoney } from '@/lib/format';
@@ -100,6 +102,8 @@ const saveInvoices = (invoices: Invoice[]): void => {
 };
 
 export default function Invoices(){
+  const navigate = useNavigate();
+  const setSelectedInvoiceId = useAppStore(s => s.setSelectedInvoiceId);
   const clients = useClients(s => s.clients)
 
   // Estado local de Invoices con persistencia
@@ -449,17 +453,17 @@ export default function Invoices(){
 
               {/* Actions */}
               <div className="mt-4 flex flex-wrap gap-2">
+                <ButtonPrimary onClick={()=>{
+                  if(!selected) return;
+                  setSelectedInvoiceId(selected.id);
+                  navigate('/preview');
+                }}>
+                  Open Preview
+                </ButtonPrimary>
                 <ButtonGlass onClick={()=>updateInvoice(selected.id, { status: selected.status==='Draft' ? 'Sent' : selected.status==='Sent' ? 'Paid' : 'Draft' })}>
                   {selected.status==='Draft' ? 'Mark as Sent' : selected.status==='Sent' ? 'Mark as Paid' : 'Mark as Draft'}
                 </ButtonGlass>
                 <ButtonGlass onClick={()=>duplicateInvoice(selected.id)}>Duplicate</ButtonGlass>
-                <ButtonGlass onClick={()=>window.print()}>Export PDF</ButtonGlass>
-                <ButtonGlass onClick={()=>{
-                  const totals = calcTotals(selected);
-                  const message = `${selected.code} Total ${fmt(totals.total, selected.currency)}`;
-                  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`,'_blank');
-                }}>WhatsApp</ButtonGlass>
-                <ButtonGlass onClick={()=>alert('Stripe Link integration - coming soon!')}>Stripe Link</ButtonGlass>
                 <ButtonGlass onClick={()=>deleteInvoice(selected.id)}>Delete</ButtonGlass>
               </div>
             </>

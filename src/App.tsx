@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import Dashboard from "@/pages/Dashboard";
 import Invoices from "@/pages/Invoices";
 import Clients from "@/pages/Clients";
+import InvoicePreview from "@/pages/InvoicePreview";
 import { useEffect, useState } from "react";
 import { ModeSwitch, NavTabs } from "@/ui/components/glass";
 import LanguageSwitcher from "@/features/settings/LanguageSwitcher";
@@ -48,6 +49,7 @@ function Shell(){
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/invoices"  element={<Invoices />} />
           <Route path="/clients"   element={<Clients />} />
+          <Route path="/preview" element={<InvoicePreview />} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </div>

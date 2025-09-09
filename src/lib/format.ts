@@ -1,5 +1,3 @@
-import i18n from '@/i18n';
-
 export function formatMoney(amount: number, currency: string = "USD", locale: string = "en-US"): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
@@ -18,7 +16,7 @@ export function formatDate(date: Date | string, locale: string = 'es-ES'): strin
 }
 
 export function getDocTypeLabel(docType: 'INVOICE' | 'QUOTE'): string {
-  return docType === 'INVOICE' ? i18n.t('docType.invoice') : i18n.t('docType.quote');
+  return docType === 'INVOICE' ? 'Invoice' : 'Quote';
 }
 
 export function formatDocumentCode(prefix: string, year: number, sequence: number): string {
