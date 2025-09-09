@@ -8,7 +8,22 @@ import { ModeSwitch, NavTabs } from "@/ui/components/glass";
 function Shell(){
   const [mode,setMode] = useState<'light'|'dark'>(() => (localStorage.getItem('mode') as any) || 'light');
   const location = useLocation(); const navigate = useNavigate();
-  useEffect(()=>{ document.documentElement.classList.toggle('dark', mode==='dark'); localStorage.setItem('mode',mode); },[mode]);
+  
+  useEffect(()=>{ 
+    document.documentElement.classList.toggle('dark', mode==='dark'); 
+    localStorage.setItem('mode',mode); 
+  },[mode]);
+  
+  // Listen for navigation events from child components
+  useEffect(() => {
+    const handleNavigateToInvoices = () => {
+      navigate('/invoices')
+    }
+    
+    window.addEventListener('navigate-to-invoices', handleNavigateToInvoices)
+    return () => window.removeEventListener('navigate-to-invoices', handleNavigateToInvoices)
+  }, [navigate])
+  
   const tab = location.pathname.startsWith('/invoices') ? 'Invoices' : location.pathname.startsWith('/clients') ? 'Clients' : 'Dashboard';
   return (
     <div className="min-h-screen w-full relative overflow-hidden">

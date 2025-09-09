@@ -15,6 +15,12 @@ function ClientLine({ c, active, onClick }: { c: Client; active: boolean; onClic
 
 function ClientDetails({ c }:{ c: Client }){
   const updateClient = useClients(s => s.updateClient)
+  
+  const handleNewInvoice = () => {
+    // Navigate to Invoices tab - using custom event to communicate with parent
+    window.dispatchEvent(new CustomEvent('navigate-to-invoices'))
+  }
+  
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
       <div className="text-lg font-semibold">{c.name}</div>
@@ -30,7 +36,7 @@ function ClientDetails({ c }:{ c: Client }){
         <Field label="Notes"><InputGlass value={c.notes ?? ''} onChange={e=>updateClient(c.id,{ notes:(e.target as HTMLInputElement).value })} /></Field>
       </div>
       <div className="mt-4 flex gap-2">
-        <ButtonGlass>New Invoice</ButtonGlass>
+        <ButtonGlass onClick={handleNewInvoice}>New Invoice</ButtonGlass>
         <ButtonGlass>Message</ButtonGlass>
       </div>
     </div>

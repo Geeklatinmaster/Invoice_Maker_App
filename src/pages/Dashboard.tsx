@@ -7,12 +7,23 @@ export default function Dashboard(){
   const selectedClientId = useClients(s => s.selectedClientId)
   const selectClient = useClients(s => s.selectClient)
   const selected = useSelectedClient()
+  
+  // Static KPI data for demo
+  const kpiData = {
+    totalPaid: "$9,250",
+    pendingCount: 12,
+    overdueCount: 3
+  }
 
   const handleClientChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const name = e.target.value
     const match = clients.find(c => c.name === name)
     if (match) selectClient(match.id)
   }, [clients, selectClient])
+  
+  const handleNewInvoice = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('navigate-to-invoices'))
+  }, [])
 
   return (
     <>
@@ -39,14 +50,16 @@ export default function Dashboard(){
               <Field label="Issue Date"><InputGlass type="date" defaultValue="2025-08-14" /></Field>
             </div>
             <div className="mt-5 flex gap-3">
-              <ButtonPrimary>Save</ButtonPrimary><ButtonGlass>New</ButtonGlass><ButtonGhost>Import</ButtonGhost>
+              <ButtonPrimary onClick={handleNewInvoice}>New Invoice</ButtonPrimary>
+              <ButtonGlass>Save Template</ButtonGlass>
+              <ButtonGhost>Import</ButtonGhost>
             </div>
           </GlassCard>
 
           <div className="grid grid-cols-3 gap-4">
-            <Kpi tone="indigo" title="Total" value="$9,250" sub="Paid" />
-            <Kpi tone="amber" title="Pending" value="12" sub="Invoices" />
-            <Kpi tone="rose"  title="Overdue" value="3"  sub="Review" />
+            <Kpi tone="indigo" title="Total" value={kpiData.totalPaid} sub="Paid" />
+            <Kpi tone="amber" title="Pending" value={kpiData.pendingCount.toString()} sub="Invoices" />
+            <Kpi tone="rose"  title="Overdue" value={kpiData.overdueCount.toString()}  sub="Review" />
           </div>
         </div>
 
