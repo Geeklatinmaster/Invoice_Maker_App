@@ -41,7 +41,7 @@ export default function DocumentHeader({
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            {getDocTypeLabel(docType, activeBrand?.locale?.startsWith('es') ? 'es' : 'en')}
+            {getDocTypeLabel(docType)}
           </h2>
           <div className="flex items-center gap-2">
             <span className="text-sm font-mono text-slate-600 dark:text-slate-400">

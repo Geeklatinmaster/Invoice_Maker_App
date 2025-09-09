@@ -1,5 +1,7 @@
-export function formatMoney(amount: number, currency: string = "USD"): string {
-  return new Intl.NumberFormat('en-US', {
+import i18n from '@/i18n';
+
+export function formatMoney(amount: number, currency: string = "USD", locale: string = "en-US"): string {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
     minimumFractionDigits: 2,
@@ -15,11 +17,8 @@ export function formatDate(date: Date | string, locale: string = 'es-ES'): strin
   }).format(d).replace(/\b\w/g, l => l.toUpperCase());
 }
 
-export function getDocTypeLabel(docType: 'INVOICE' | 'QUOTE', lang: string = 'es'): string {
-  if (lang === 'es') {
-    return docType === 'INVOICE' ? 'FACTURA' : 'PRESUPUESTO';
-  }
-  return docType;
+export function getDocTypeLabel(docType: 'INVOICE' | 'QUOTE'): string {
+  return docType === 'INVOICE' ? i18n.t('docType.invoice') : i18n.t('docType.quote');
 }
 
 export function formatDocumentCode(prefix: string, year: number, sequence: number): string {

@@ -1,0 +1,75 @@
+{
+  "actions": { 
+    "createInvoice": "Create invoice", 
+    "save": "Save", 
+    "export": "Export", 
+    "generateReports": "Generate reports" 
+  },
+  "docType": { 
+    "invoice": "INVOICE", 
+    "quote": "QUOTE" 
+  },
+  "header": {
+    "clientData": "CLIENT DETAILS",
+    "dateOf": "{{title}} DATE",
+    "code": "Code",
+    "due": "DUE",
+    "currency": "CURRENCY"
+  },
+  "dashboard": {
+    "overview": "Overview",
+    "invoiceStatus": "Invoice Status",
+    "revenueByMonth": "Revenue by Month",
+    "recentDocs": "Recent Invoices/Quotes",
+    "recentClients": "Recent Clients",
+    "kpi": { 
+      "total": "Total", 
+      "paid": "Paid", 
+      "unpaid": "Unpaid", 
+      "overdue": "Overdue", 
+      "conv": "Conversion", 
+      "invoices": "#Invoices", 
+      "quotes": "#Quotes", 
+      "clients": "#Clients" 
+    },
+    "filters": { 
+      "both": "Invoices + Quotes", 
+      "invoice": "Invoices", 
+      "quote": "Quotes", 
+      "last30": "Last 30 days", 
+      "thisMonth": "This month", 
+      "ytd": "YTD", 
+      "last12": "Last 12 months" 
+    }
+  },
+  "status": { 
+    "paid": "Paid", 
+    "pending": "Pending", 
+    "overdue": "Overdue", 
+    "draft": "Draft", 
+    "void": "Void", 
+    "sent": "Sent", 
+    "viewed": "Viewed" 
+  },
+  "table": { 
+    "id": "ID", 
+    "client": "Client", 
+    "date": "Date", 
+    "amount": "Amount", 
+    "status": "Status" 
+  },
+  "items": { 
+    "name": "Name", 
+    "description": "Description (optional)", 
+    "qty": "Qty", 
+    "price": "Price", 
+    "tax": "Tax%", 
+    "discount": "Disc%", 
+    "total": "Total" 
+  },
+  "settings": { 
+    "language": "Language", 
+    "spanish": "Spanish", 
+    "english": "English" 
+  }
+}

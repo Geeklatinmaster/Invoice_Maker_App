@@ -4,6 +4,7 @@ import Invoices from "@/pages/Invoices";
 import Clients from "@/pages/Clients";
 import { useEffect, useState } from "react";
 import { ModeSwitch, NavTabs } from "@/ui/components/glass";
+import LanguageSwitcher from "@/features/settings/LanguageSwitcher";
 
 function Shell(){
   const [mode,setMode] = useState<'light'|'dark'>(() => (localStorage.getItem('mode') as any) || 'light');
@@ -32,7 +33,10 @@ function Shell(){
         <header className="mb-6 md:mb-8 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">InvoiceMaker — Liquid Glass</h1>
-            <ModeSwitch mode={mode} onToggle={()=>setMode(m=>m==='light'?'dark':'light')} />
+            <div className="flex items-center gap-4">
+              <LanguageSwitcher />
+              <ModeSwitch mode={mode} onToggle={()=>setMode(m=>m==='light'?'dark':'light')} />
+            </div>
           </div>
           <NavTabs tabs={['Dashboard','Invoices','Clients']} active={tab} onChange={(t)=>navigate(`/${t.toLowerCase()}`)} />
         </header>
