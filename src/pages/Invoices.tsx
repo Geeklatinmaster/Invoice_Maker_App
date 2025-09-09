@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useClients } from '@/store/clients'
 import { GlassCard, InputGlass, SelectGlass, ButtonPrimary, ButtonGlass, Chip } from "@/ui/components/glass";
+import ItemRowEditor from '@/components/ItemRowEditor';
 
 // ===== Invoices Types & Utils =====
 type InvoiceStatus = "Draft" | "Sent" | "Paid" | "Overdue";
 type Currency = "USD" | "EUR" | "VES";
 
-type InvoiceItem = {
+export type InvoiceItem = {
   id: string;
   name: string;
   description?: string;
@@ -32,7 +33,7 @@ type Invoice = {
 
 const uid = (p = "id") => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,6)}`;
 const today = () => new Date().toISOString().slice(0,10);
-const fmt = (n: number, cur: Currency = "USD") =>
+export const fmt = (n: number, cur: Currency = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: cur }).format(n);
 
 function calcItemTotals(it: InvoiceItem){
@@ -56,6 +57,20 @@ function calcTotals(inv: Invoice){
   const taxGlobal = inv.globalTaxRate ? after * (inv.globalTaxRate/100) : 0;
   return { ...agg, tax: agg.tax + taxGlobal, total: after + taxGlobal };
 }
+
+// ===== Price Input Utils =====
+export const normalizePriceInput = (raw: string): string => {
+  if (!raw) return "";
+  // solo dígitos y un punto
+  let s = raw.replace(/[^\d.]/g, "");
+  if (s.startsWith(".")) s = "0" + s;              // ".5" -> "0.5"
+  const [a, ...rest] = s.split(".");
+  s = a + (rest.length ? "." + rest.join("") : ""); // máximo un punto
+  if (s.startsWith("0") && s.length > 1 && s[1] !== ".")
+    s = s.replace(/^0+(?=\d)/, "");                 // "0150" -> "150"
+  if (/^0+$/.test(s)) s = "0";
+  return s;
+};
 
 // ===== Persistence Utils =====
 const INVOICES_STORAGE_KEY = "invoices_v1";
@@ -182,7 +197,7 @@ export default function Invoices(){
     const inv: Invoice = {
       id: uid("inv"), code, clientId: clientId || "c1",
       issueDate: today(), currency: "USD", status: "Draft",
-      items: [{ id: uid("it"), name: "Item", qty:1, unitPrice:0 }]
+      items: [{ id: uid("it"), name: "", description: "", qty:1, unitPrice:0 }]
     };
     setInvoices(p => [inv, ...p]);
     setSelectedId(inv.id);
@@ -193,7 +208,7 @@ export default function Invoices(){
     markDirty();
   }
   function addItem(id: string, item?: Partial<InvoiceItem>){
-    setInvoices(p => p.map(i => i.id===id ? { ...i, items: [...i.items, { id: uid("it"), name: "Item", qty:1, unitPrice:0, ...item }] } : i));
+    setInvoices(p => p.map(i => i.id===id ? { ...i, items: [...i.items, { id: uid("it"), name: "", description: "", qty:1, unitPrice:0, ...item }] } : i));
     markDirty();
   }
   function updateItem(id: string, itemId: string, patch: Partial<InvoiceItem>){
@@ -346,7 +361,7 @@ export default function Invoices(){
               {/* Editable items */}
               <div className="mt-3 space-y-2 text-sm">
                 <div className="grid grid-cols-12 gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
-                  <div className="col-span-5">Name</div>
+                  <div className="col-span-5">Item</div>
                   <div className="col-span-1">Qty</div>
                   <div className="col-span-2">Price</div>
                   <div className="col-span-1">Tax%</div>
@@ -355,56 +370,17 @@ export default function Invoices(){
                   <div className="col-span-1"></div>
                 </div>
                 {selected.items.map(it => (
-                  <div key={it.id} className="grid grid-cols-12 gap-1 items-center">
-                    <input 
-                      className="col-span-5 rounded-md border border-white/20 bg-white/40 px-2 py-1 text-xs dark:bg-white/5" 
-                      value={it.name} 
-                      onChange={(e:any)=>updateItem(selected.id, it.id, { name: e.target.value })} 
-                    />
-                    <input 
-                      type="number" 
-                      min={0} 
-                      className="col-span-1 rounded-md border border-white/20 bg-white/40 px-1 py-1 text-xs dark:bg-white/5" 
-                      value={it.qty} 
-                      onChange={(e:any)=>updateItem(selected.id, it.id, { qty: Number(e.target.value) })} 
-                    />
-                    <input 
-                      type="number" 
-                      min={0} 
-                      className="col-span-2 rounded-md border border-white/20 bg-white/40 px-1 py-1 text-xs dark:bg-white/5" 
-                      value={it.unitPrice} 
-                      onChange={(e:any)=>updateItem(selected.id, it.id, { unitPrice: Number(e.target.value) })} 
-                    />
-                    <input 
-                      type="number" 
-                      min={0} 
-                      max={100}
-                      className="col-span-1 rounded-md border border-white/20 bg-white/40 px-1 py-1 text-xs dark:bg-white/5" 
-                      placeholder="0" 
-                      value={it.taxRate ?? 0} 
-                      onChange={(e:any)=>updateItem(selected.id, it.id, { taxRate: Number(e.target.value) })} 
-                    />
-                    <input 
-                      type="number" 
-                      min={0} 
-                      max={100}
-                      className="col-span-1 rounded-md border border-white/20 bg-white/40 px-1 py-1 text-xs dark:bg-white/5" 
-                      placeholder="0" 
-                      value={it.discountRate ?? 0} 
-                      onChange={(e:any)=>updateItem(selected.id, it.id, { discountRate: Number(e.target.value) })} 
-                    />
-                    <div className="col-span-1 text-right text-xs font-mono">{fmt(it.qty * it.unitPrice, selected.currency)}</div>
-                    <button 
-                      className="col-span-1 text-center text-rose-500 hover:text-rose-700" 
-                      onClick={()=>removeItem(selected.id, it.id)}
-                      disabled={selected.items.length <= 1}
-                    >
-                      ×
-                    </button>
-                  </div>
+                  <ItemRowEditor
+                    key={it.id}
+                    item={it}
+                    currency={selected.currency}
+                    onUpdateItem={(itemId, patch) => updateItem(selected.id, itemId, patch)}
+                    onRemoveItem={(itemId) => removeItem(selected.id, itemId)}
+                    canDelete={selected.items.length > 1}
+                  />
                 ))}
                 <div className="pt-2">
-                  <ButtonGlass onClick={()=>addItem(selected.id, { name: "New Item", qty:1, unitPrice:0 })}>
+                  <ButtonGlass onClick={()=>addItem(selected.id)}>
                     + Add Item
                   </ButtonGlass>
                 </div>
