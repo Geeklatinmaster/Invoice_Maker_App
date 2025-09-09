@@ -25,7 +25,6 @@ const COLORS = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 export default function Dashboard() {
   const { t } = useTranslation('dashboard');
   const { locale } = useSettings();
-  const invoiceStore = useAppStore();
   
   const [docType, setDocType] = useState<"both" | "invoice" | "quote">("both");
   const [rangeKey, setRangeKey] = useState("last30");
@@ -36,18 +35,21 @@ export default function Dashboard() {
   }, []);
 
   // Get KPI data using new selectors
-  const kpiData = useMemo(() => selectDashboardKPIs(invoiceStore.getState(), {
+  const kpiData = useAppStore(state => selectDashboardKPIs(state, {
     range: rangeKey as any,
     docTypeFilter: docType
-  }), [invoiceStore, rangeKey, docType]);
+  }));
   
   // Get revenue by month
-  const revenueData = useMemo(() => selectRevenueByMonth(invoiceStore.getState(), {
+  const revenueData = useAppStore(state => selectRevenueByMonth(state, {
     monthsBack: 12
-  }), [invoiceStore]);
+  }));
   
   // Get recent invoices
-  const recentInvoices = useMemo(() => selectRecentInvoices(invoiceStore.getState(), 8), [invoiceStore]);
+  const recentInvoices = useAppStore(state => selectRecentInvoices(state, 8));
+  
+  // Get clients for lookup
+  const clients = useAppStore(state => state.clients);
 
   const pieData = [
     { name: t("status.paid"), value: kpiData.statusCounts.paid, color: COLORS[0] },
@@ -170,7 +172,7 @@ export default function Dashboard() {
               </div>
               <div className="space-y-1">
                 {recentInvoices.map(invoice => {
-                  const clientName = invoiceStore.getState().clients[invoice.clientId]?.name || "Unknown Client";
+                  const clientName = clients[invoice.clientId]?.name || "Unknown Client";
                   return (
                     <div key={invoice.id} className="grid grid-cols-12 gap-2 items-center px-2 py-2 text-sm hover:bg-white/20 dark:hover:bg-white/5 rounded-lg">
                       <div className="col-span-2 font-mono text-xs">{invoice.code || invoice.id.slice(0, 8)}</div>
