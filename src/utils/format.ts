@@ -13,16 +13,16 @@ const dateLocales = {
  * Format currency using Intl.NumberFormat
  */
 export function formatCurrency(
-  amount: number,
-  locale: SupportedLocale = 'en-US',
-  currency: string = 'USD'
+  value: number,
+  currency: string = 'USD',
+  locale: SupportedLocale = 'en-US'
 ): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(amount);
+  }).format(value);
 }
 
 /**

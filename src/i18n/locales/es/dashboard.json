@@ -2,17 +2,26 @@
   "overview": "Resumen",
   "filters": {
     "both": "Facturas + Cotizaciones",
+    "invoice": "Solo Facturas",
+    "quote": "Solo Cotizaciones",
     "last30": "Últimos 30 días",
     "last90": "Últimos 90 días",
     "thisYear": "Este año",
     "all": "Todo el tiempo"
   },
   "kpi": {
-    "total": "Facturado",
+    "total": "Total Facturado",
     "paid": "Cobrado",
     "unpaid": "Pendiente",
     "overdue": "Vencido",
-    "clients": "Activos"
+    "clients": "Clientes Activos"
+  },
+  "kpiSub": {
+    "billed": "Facturado",
+    "received": "Cobrado",
+    "outstanding": "Pendiente",
+    "pastDue": "Vencido",
+    "active": "Activos"
   },
   "status": {
     "draft": "Borrador",
@@ -29,5 +38,24 @@
   "charts": {
     "revenueByMonth": "Ingresos por Mes",
     "statusDistribution": "Distribución de Estados"
+  },
+  "tables": {
+    "recentInvoices": "Facturas Recientes",
+    "recentClients": "Clientes Recientes",
+    "unknownClient": "Cliente Desconocido",
+    "headers": {
+      "id": "ID",
+      "type": "Tipo",
+      "client": "Cliente",
+      "date": "Fecha",
+      "amount": "Monto",
+      "status": "Estado",
+      "documents": "Documentos",
+      "lastActivity": "Última Actividad"
+    }
+  },
+  "docTypes": {
+    "invoice": "Factura",
+    "quote": "Cotización"
   }
 }

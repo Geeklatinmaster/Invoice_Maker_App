@@ -2,17 +2,26 @@
   "overview": "Overview",
   "filters": {
     "both": "Invoices + Quotes",
+    "invoice": "Invoices Only",
+    "quote": "Quotes Only",
     "last30": "Last 30 days",
     "last90": "Last 90 days",
     "thisYear": "This year",
     "all": "All time"
   },
   "kpi": {
-    "total": "Billed",
+    "total": "Total Billed",
     "paid": "Received",
     "unpaid": "Outstanding",
     "overdue": "Past Due",
-    "clients": "Active"
+    "clients": "Active Clients"
+  },
+  "kpiSub": {
+    "billed": "Billed",
+    "received": "Received",
+    "outstanding": "Outstanding",
+    "pastDue": "Past Due",
+    "active": "Active"
   },
   "status": {
     "draft": "Draft",
@@ -29,5 +38,24 @@
   "charts": {
     "revenueByMonth": "Revenue by Month",
     "statusDistribution": "Status Distribution"
+  },
+  "tables": {
+    "recentInvoices": "Recent Invoices",
+    "recentClients": "Recent Clients",
+    "unknownClient": "Unknown Client",
+    "headers": {
+      "id": "ID",
+      "type": "Type",
+      "client": "Client",
+      "date": "Date",
+      "amount": "Amount",
+      "status": "Status",
+      "documents": "Documents",
+      "lastActivity": "Last Activity"
+    }
+  },
+  "docTypes": {
+    "invoice": "Invoice",
+    "quote": "Quote"
   }
 }

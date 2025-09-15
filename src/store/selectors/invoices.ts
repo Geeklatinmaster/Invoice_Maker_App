@@ -127,9 +127,13 @@ export function selectDashboardKPIs(
  */
 export function selectRevenueByMonth(
   state: AppState,
-  options: { monthsBack?: number } = {}
+  options: { 
+    monthsBack?: number;
+    range?: DateRange;
+    docTypeFilter?: DocTypeFilter;
+  } = {}
 ) {
-  const { monthsBack = 12 } = options;
+  const { monthsBack = 12, range = 'all', docTypeFilter = 'both' } = options;
   
   const now = new Date();
   const months: Array<{ month: string; revenue: number; invoiceCount: number }> = [];
@@ -145,8 +149,13 @@ export function selectRevenueByMonth(
     });
   }
   
+  // Get filtered invoices
+  let invoices = Object.values(state.invoices);
+  invoices = filterInvoicesByDateRange(invoices, range);
+  invoices = filterInvoicesByDocType(invoices, docTypeFilter);
+  
   // Aggregate paid invoices by month
-  Object.values(state.invoices).forEach(invoice => {
+  invoices.forEach(invoice => {
     if (invoice.status !== 'paid') return;
     
     const issueDate = new Date(invoice.issueDate);
@@ -188,6 +197,47 @@ export function selectInvoicesByStatus(state: AppState, status: InvoiceStatus) {
  */
 export function selectInvoicesByClient(state: AppState, clientId: string) {
   return Object.values(state.invoices).filter(invoice => invoice.clientId === clientId);
+}
+
+/**
+ * Select recent clients with activity
+ */
+export function selectRecentClients(state: AppState, limit: number = 10) {
+  const clientActivity: Record<string, { 
+    name: string; 
+    count: number; 
+    total: number; 
+    last: string;
+  }> = {};
+  
+  // Aggregate activity by client
+  Object.values(state.invoices).forEach(invoice => {
+    const client = state.clients[invoice.clientId];
+    if (!client) return;
+    
+    if (!clientActivity[invoice.clientId]) {
+      clientActivity[invoice.clientId] = {
+        name: client.name,
+        count: 0,
+        total: 0,
+        last: invoice.issueDate
+      };
+    }
+    
+    const activity = clientActivity[invoice.clientId];
+    activity.count += 1;
+    activity.total += invoice.totals.grandTotal;
+    
+    // Update last activity date
+    if (new Date(invoice.issueDate) > new Date(activity.last)) {
+      activity.last = invoice.issueDate;
+    }
+  });
+  
+  // Sort by last activity and return top N
+  return Object.values(clientActivity)
+    .sort((a, b) => new Date(b.last).getTime() - new Date(a.last).getTime())
+    .slice(0, limit);
 }
 
 /**
