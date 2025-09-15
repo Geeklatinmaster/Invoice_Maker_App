@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useClients } from '@/store/clients'
 import { GlassCard, InputGlass, SelectGlass, ButtonPrimary, ButtonGlass, Chip } from "@/ui/components/glass";
+import PersistenceTest from '@/features/invoice/components/PersistenceTest';
 
 // ===== Invoices Types & Utils =====
 type InvoiceStatus = "Draft" | "Sent" | "Paid" | "Overdue";
@@ -493,6 +494,7 @@ export default function Invoices(){
         </GlassCard>
       </div>
     </section>
+    <PersistenceTest />
     </>
   );
 }

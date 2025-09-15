@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { nanoid } from "nanoid";
-import { save, load } from "../lib/storage";
+import { saveLegacy, loadLegacy, sanitizePrice, preserveId } from "../lib/storage";
 import type { Profile, Invoice, InvoiceItem, DocType, FooterId, RetentionPreset } from "../types/types";
 
 // Robust code generation helpers
@@ -40,6 +40,11 @@ type InvoiceStore = {
   setGlobalDiscount: (discount: number) => void;
   setGlobalTax: (tax: number) => void;
   setRetentionPreset: (preset: RetentionPreset) => void;
+  
+  // Document management
+  createNewDocument: () => void;
+  duplicateDocument: () => void;
+  loadDocumentForEdit: (invoice: Invoice) => void;
   
   // Item actions
   addItem: () => void;
@@ -90,7 +95,7 @@ const initialState = {
 };
 
 // Load persisted state
-const persistedState = load(initialState);
+const persistedState = loadLegacy(initialState);
 // Ensure selectedProfileId is set
 if (!persistedState.selectedProfileId && persistedState.profiles.length > 0) {
   persistedState.selectedProfileId = persistedState.profiles[0].id;
@@ -102,7 +107,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
   // Profile actions
   selectProfile: (id: string) => {
     set({ selectedProfileId: id });
-    save(get());
+    saveLegacy(get());
   },
   
   addProfile: (profile: Partial<Profile>) => {
@@ -120,7 +125,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
       profiles: [...state.profiles, newProfile],
       selectedProfileId: newProfile.id,
     }));
-    save(get());
+    saveLegacy(get());
   },
   
   updateProfile: (id: string, updates: Partial<Profile>) => {
@@ -129,7 +134,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
         p.id === id ? { ...p, ...updates } : p
       ),
     }));
-    save(get());
+    saveLegacy(get());
   },
   
   deleteProfile: (id: string) => {
@@ -152,7 +157,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
         selectedProfileId: newSelectedId,
       });
     }
-    save(get());
+    saveLegacy(get());
   },
   
   exportProfiles: () => {
@@ -167,7 +172,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
           profiles,
           selectedProfileId: profiles[0].id,
         });
-        save(get());
+        saveLegacy(get());
       }
     } catch (error) {
       console.error("Failed to import profiles:", error);
@@ -185,7 +190,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     }));
     // Auto-recompute totals after docType change
     get().compute();
-    save(get());
+    saveLegacy(get());
   },
   
   regenerateCode: () => {
@@ -199,39 +204,41 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     });
     // Auto-recompute totals after regeneration
     get().compute();
-    save(get());
+    saveLegacy(get());
   },
   
   patchInvoice: (updates: Partial<Invoice>) => {
     set(state => ({
       invoice: { ...state.invoice, ...updates },
     }));
-    save(get());
+    saveLegacy(get());
   },
   
   setFooterId: (footerId: FooterId) => {
     set(state => ({
       invoice: { ...state.invoice, footerId },
     }));
-    save(get());
+    saveLegacy(get());
   },
   
   setGlobalDiscount: (discount: number) => {
+    const sanitizedDiscount = Math.min(100, sanitizePrice(discount));
     set(state => ({
-      invoice: { ...state.invoice, globalDiscount: discount },
+      invoice: { ...state.invoice, globalDiscount: sanitizedDiscount },
     }));
     // Auto-recompute totals after discount change
     get().compute();
-    save(get());
+    saveLegacy(get());
   },
   
   setGlobalTax: (tax: number) => {
+    const sanitizedTax = sanitizePrice(tax);
     set(state => ({
-      invoice: { ...state.invoice, globalTaxRate: tax },
+      invoice: { ...state.invoice, globalTaxRate: sanitizedTax },
     }));
     // Auto-recompute totals after tax change
     get().compute();
-    save(get());
+    saveLegacy(get());
   },
   
   setRetentionPreset: (preset: RetentionPreset) => {
@@ -240,7 +247,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     }));
     // Auto-recompute totals after retention change
     get().compute();
-    save(get());
+    saveLegacy(get());
   },
   
   // Item actions
@@ -263,21 +270,36 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     }));
     // Auto-recompute totals after adding item
     get().compute();
-    save(get());
+    saveLegacy(get());
   },
   
   updateItem: (id: string, updates: Partial<InvoiceItem>) => {
+    // Sanitize price fields
+    const sanitizedUpdates = { ...updates };
+    if (sanitizedUpdates.unitPrice !== undefined) {
+      sanitizedUpdates.unitPrice = sanitizePrice(sanitizedUpdates.unitPrice);
+    }
+    if (sanitizedUpdates.qty !== undefined) {
+      sanitizedUpdates.qty = Math.max(1, Math.floor(sanitizePrice(sanitizedUpdates.qty)));
+    }
+    if (sanitizedUpdates.taxRate !== undefined && sanitizedUpdates.taxRate !== null) {
+      sanitizedUpdates.taxRate = sanitizePrice(sanitizedUpdates.taxRate);
+    }
+    if (sanitizedUpdates.discount !== undefined && sanitizedUpdates.discount !== null) {
+      sanitizedUpdates.discount = Math.min(100, sanitizePrice(sanitizedUpdates.discount));
+    }
+
     set(state => ({
       invoice: {
         ...state.invoice,
         items: state.invoice.items.map(item =>
-          item.id === id ? { ...item, ...updates } : item
+          item.id === id ? { ...item, ...sanitizedUpdates } : item
         ),
       },
     }));
     // Auto-recompute totals after updating item
     get().compute();
-    save(get());
+    saveLegacy(get());
   },
   
   removeItem: (id: string) => {
@@ -289,7 +311,7 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     }));
     // Auto-recompute totals after removing item
     get().compute();
-    save(get());
+    saveLegacy(get());
   },
   
   // Computation
@@ -338,6 +360,64 @@ export const useInvoice = create<InvoiceStore>((set, get) => ({
     };
     
     set({ totals });
-    save(get());
+    saveLegacy(get());
+  },
+  
+  // Document management methods
+  createNewDocument: () => {
+    const newInvoice = createDefaultInvoice();
+    set({
+      invoice: newInvoice,
+      totals: createDefaultTotals(),
+    });
+    get().compute();
+    saveLegacy(get());
+  },
+  
+  duplicateDocument: () => {
+    const state = get();
+    const currentInvoice = state.invoice;
+    
+    // Create duplicate with new code and IDs
+    const duplicateInvoice: Invoice = {
+      ...currentInvoice,
+      code: makeCode(currentInvoice.docType),
+      items: currentInvoice.items.map(item => ({
+        ...item,
+        id: nanoid(), // Generate new IDs for duplicated items
+      })),
+      issueDate: new Date().toISOString().split("T")[0], // Update to current date
+    };
+    
+    set({
+      invoice: duplicateInvoice,
+      totals: createDefaultTotals(),
+    });
+    get().compute();
+    saveLegacy(get());
+  },
+  
+  loadDocumentForEdit: (invoice: Invoice) => {
+    // Preserve existing IDs when loading for edit
+    const sanitizedInvoice: Invoice = {
+      ...invoice,
+      items: invoice.items.map(item => ({
+        ...item,
+        id: preserveId(item.id), // Preserve existing IDs
+        unitPrice: sanitizePrice(item.unitPrice),
+        qty: Math.max(1, Math.floor(sanitizePrice(item.qty))),
+        taxRate: item.taxRate !== undefined ? sanitizePrice(item.taxRate) : undefined,
+        discount: item.discount !== undefined ? Math.min(100, sanitizePrice(item.discount)) : undefined,
+      })),
+      globalDiscount: invoice.globalDiscount !== undefined ? Math.min(100, sanitizePrice(invoice.globalDiscount)) : undefined,
+      globalTaxRate: invoice.globalTaxRate !== undefined ? sanitizePrice(invoice.globalTaxRate) : undefined,
+    };
+    
+    set({
+      invoice: sanitizedInvoice,
+      totals: createDefaultTotals(),
+    });
+    get().compute();
+    saveLegacy(get());
   },
 }));
